@@ -1,0 +1,13 @@
+# SDD conventions - shared by the agents and validators across all stages.
+
+# --- Phase 2: Spec Authoring & Refinement ---
+baseline_tag_format: "reqs-baseline-v%d"
+nfr_categories: [agent_response, page_load, crud_action, availability, throughput]
+scenario_kinds: [happy, negative, boundary]
+security_requires_negative: true            # a security REQ without a negative scenario FAILS
+status_flow: [draft, reviewed, approved, building, done]   # forward-only transitions
+feature_id_format: "FEAT-%02d"
+epic_id_format: "EPIC-%02d"
+requirement_types: [functional, non-functional, integration, data, security, agentic]
+modules: [Sales, Service, ContactCenter, PowerPlatform, Azure, CopilotStudio]
+priorities: [Must, Should, Could, Wont]     # MoSCoW

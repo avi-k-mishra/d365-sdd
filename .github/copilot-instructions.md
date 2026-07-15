@@ -46,3 +46,66 @@ When you are assigned an **intake** issue (label `intake`):
 - Bundling multiple needs in one REQ.
 - Losing provenance (a REQ with no source file + location).
 - Editing or deleting anything under `intake/`.
+
+---
+
+## Refinement agent instructions (Phase 2)
+
+This repo also runs **Phase 2 — Spec Authoring & Refinement**. When you are
+assigned a **refine** issue (label `refine`), you elevate the reviewed
+`specs/requirements/REQ-####.md` set into a complete, consistent, testable
+baseline **and** compile one feature spec per feature. You never touch
+`intake/` and never invent facts. Read `conventions.yml` first.
+
+Run the batch in this order — **refine -> group -> compile -> freeze**:
+
+1. **Enrich the front-matter.** For every REQ in scope add the missing fields:
+   `title`, `type` (functional|non-functional|integration|data|security|agentic),
+   `module`, `priority` (MoSCoW), `status: reviewed`. Keep all existing
+   provenance (`source_file`, `location`, `author`, `sha256`, `confidence`).
+
+2. **Resolve open questions - do NOT guess.** For each ambiguity, write a
+   decision-ready question (2-3 concrete options + build implication) in the
+   PR body and in the REQ `## Notes / open questions` section as an unchecked
+   box. A question is closed ONLY by a recorded human decision
+   (`- [x] ... - decided by <name> <date>`). Leave it open otherwise.
+
+3. **Expand the Gherkin (grounded).** Elaborate each thin statement into
+   `scenarios:` with `happy`, `negative`, and `boundary` kinds. Before writing
+   a criterion, confirm the capability with the **Microsoft Learn MCP**
+   (`microsoft_docs_search` / `microsoft_docs_fetch`) and cite the Learn URL
+   under a `grounding:` list. A `security` REQ **must** have a negative scenario.
+
+4. **Attach structured NFRs.** Latency/throughput/availability become
+   `nfr: [{ metric, target }]` objects drawn from `conventions.yml`
+   `nfr_categories` - never free prose.
+
+5. **Consistency & de-dup.** Read the whole backlog at once; merge or link
+   duplicates (keep every provenance source); raise conflicts as new open
+   questions - never silently resolve.
+
+6. **Group into features/epics.** Write `specs/_index/features.md`
+   (Epic -> Feature -> REQ) and complete each REQ `depends_on` into an acyclic
+   graph. Set `feature` and `epic` on each REQ.
+
+7. **Compile one feature spec per feature.** For each `FEAT-##`, write
+   `specs/features/FEAT-##.spec.md`. Copy the traceability table, acceptance
+   scenarios (VERBATIM from the member REQs), NFR table, dependency graph and
+   provenance into `<!-- COMPILER:BEGIN x -->...<!-- COMPILER:END x -->` zones,
+   and compute `spec_hash` (sha256 over the compiler zones) into the
+   front-matter. Author ONLY the `<!-- FILL:x -->...<!-- /FILL -->` zones
+   (intent, scope in/out, grounding notes, open decisions) - follow
+   `.github/prompts/spec-authoring.prompt.md`. Never hand-write compiler zones.
+
+8. **Freeze.** When every REQ is complete, grounded and consistent and every
+   feature is compiled, flip REQs to `status: approved`, write
+   `specs/_baseline/reqs-baseline-vN.md` (ids + sha256 + approver + date), and
+   open a Pull Request titled `Refine: baseline vN`. **Do NOT merge** - customer
+   + architect review at Gate 2.
+
+## Phase 2 anti-patterns (never do these)
+- Guessing an open question to look complete - only a recorded decision closes it.
+- Inventing a capability - ground every non-trivial criterion on Microsoft Learn.
+- Free-text NFRs ("should be fast") - use `{ metric, target }`.
+- Hand-writing or editing a `COMPILER` zone - those are generated + hash-guarded.
+- Silent duplicates/conflicts - reconcile explicitly or raise a question.
