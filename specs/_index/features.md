@@ -32,5 +32,4 @@ Dependency graph: REQ-0003 → REQ-0001; REQ-0004 → REQ-0001, REQ-0003
 ---
 
 ## Open questions blocking Stage 3
-- OQ-003-1: Customer service tier names and D365 priority value mappings (REQ-0003)
-- OQ-004-1: SLA duration per tier (REQ-0004) — contingent on OQ-003-1
+None. All open questions (OQ-003-1, OQ-004-1) have been resolved — decided by avinam@microsoft.com, 2026-07-15. Stage 3 design can proceed.

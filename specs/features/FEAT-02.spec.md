@@ -3,8 +3,8 @@ id: FEAT-02
 title: "Tiered SLA & Escalation"
 epic: EPIC-01
 member_reqs: [REQ-0003, REQ-0004]
-spec_hash: "12928460caf0e42eeedc8c42555b75f8b6d7052a0d5793b8ae0061ec8f74df93"
-status: reviewed
+spec_hash: "60140d8bce06910b5b376ac71d128299badf6c15a3c664f0fc39f00fd628dcb6"
+status: approved
 ---
 
 <!-- FILL:intent -->
@@ -17,16 +17,14 @@ service commitments and enabling proactive management (REQ-0003, REQ-0004).
 
 <!-- FILL:scope -->
 In:
-- Tier-to-priority mapping applied at case creation (via ARC rule action or workflow)
-- SLA KPI definition (e.g. "Resolve By") applied per case priority / tier
+- Tier-to-priority mapping applied at case creation (via ARC rule action or workflow): Gold→High, Silver→Normal, Bronze→Low, Default→Normal
+- SLA KPI definition ("Resolve By" and "First Response By") applied per case priority / tier with the agreed durations (Gold: 1 h / 4 h; Silver: 4 h / 8 h; Bronze: 8 h / next business day)
 - SLA KPI failure actions: setting "Is Escalated" flag and notifying the supervisor queue
 - SLA KPI pause behaviour when case status is "On Hold"
 - Default priority ("Normal") when no tier is defined on the customer record
 
 Out:
 - Service tier master data management (Customer/Account tier field ownership is out of scope)
-- Definition of tier names and SLA durations — these are open questions (OQ-003-1, OQ-004-1)
-  that must be resolved by the customer before Stage 3 design can proceed
 - Routing cases to specific agents after escalation (separate routing configuration)
 - Email case creation (owned by FEAT-01)
 <!-- /FILL -->
@@ -43,16 +41,18 @@ behaviour via SLA KPI pause conditions.
 <!-- /FILL -->
 
 <!-- FILL:open-decisions -->
-The following open questions must be resolved by the customer before Stage 3 design:
+All open questions for this feature have been resolved:
 
-- **OQ-003-1** (from REQ-0003): Customer service tier names and their mapping to Dynamics 365
-  case priority values are undefined. Three options proposed (Gold/Silver/Bronze → High/Normal/Low,
-  or a four-tier model, or customer-defined labels). Without this decision, the ARC rule
-  action "Set Priority" and the SLA KPI applicability filter cannot be authored.
+- **OQ-003-1** (DECIDED — avinam@microsoft.com, 2026-07-15): Tier-to-priority mapping confirmed as Gold→High, Silver→Normal, Bronze→Low, Default→Normal. The ARC rule action "Set Priority" and SLA KPI applicability filter can now be fully configured.
 
-- **OQ-004-1** (from REQ-0004): SLA durations per tier (first response and resolution time)
-  are undefined, contingent on OQ-003-1. Without this decision, "Failure After" values in the
-  SLA items and the supervisor queue assignment for escalation notifications cannot be configured.
+- **OQ-004-1** (DECIDED — avinam@microsoft.com, 2026-07-15): SLA durations per tier confirmed:
+  | Tier | First response | Resolution |
+  |------|----------------|-----------|
+  | Gold | 1 h | 4 h |
+  | Silver | 4 h | 8 h |
+  | Bronze | 8 h | Next business day |
+
+No open ambiguities remain in REQ-0003 or REQ-0004 that block Stage 3 design.
 <!-- /FILL -->
 
 ---
@@ -62,8 +62,8 @@ The following open questions must be resolved by the customer before Stage 3 des
 <!-- COMPILER:BEGIN traceability -->
 | REQ | Title | Type | Priority | Status |
 |-----|-------|------|----------|--------|
-| REQ-0003 | Case Priority Assignment Based on Customer Service Tier | functional | Must | reviewed |
-| REQ-0004 | Automatic Case Escalation on SLA Breach | functional | Must | reviewed |
+| REQ-0003 | Case Priority Assignment Based on Customer Service Tier | functional | Must | approved |
+| REQ-0004 | Automatic Case Escalation on SLA Breach | functional | Must | approved |
 <!-- COMPILER:END traceability -->
 
 ## Acceptance scenarios
@@ -72,11 +72,23 @@ The following open questions must be resolved by the customer before Stage 3 des
 ```gherkin
 Feature: Tier-driven case priority assignment
 
-  Scenario: happy — case priority set automatically from customer tier
-    Given a Case is created for a customer with a defined service tier
-    And the tier-to-priority mapping has been configured in the system
+  Scenario: happy — Gold-tier customer case set to High priority
+    Given a Case is created for a customer whose service tier is "Gold"
+    And the tier-to-priority mapping (Gold→High, Silver→Normal, Bronze→Low) is configured in the system
     When the case is saved
-    Then the Case "Priority" field is automatically set to the value mapped from the customer's tier
+    Then the Case "Priority" field is automatically set to "High"
+
+  Scenario: happy — Silver-tier customer case set to Normal priority
+    Given a Case is created for a customer whose service tier is "Silver"
+    And the tier-to-priority mapping is configured in the system
+    When the case is saved
+    Then the Case "Priority" field is automatically set to "Normal"
+
+  Scenario: happy — Bronze-tier customer case set to Low priority
+    Given a Case is created for a customer whose service tier is "Bronze"
+    And the tier-to-priority mapping is configured in the system
+    When the case is saved
+    Then the Case "Priority" field is automatically set to "Low"
 
   Scenario: negative — customer has no tier defined
     Given a Case is created for a customer with no service tier on record
@@ -85,20 +97,34 @@ Feature: Tier-driven case priority assignment
     And no error or blocking validation is raised
 
   Scenario: boundary — customer tier changes after case creation
-    Given a Case exists with a priority set from the customer's original service tier
-    When the customer's service tier is updated to a different value
-    Then the existing case priority is NOT retroactively changed
-    And only Cases created after the tier update reflect the new tier mapping
+    Given a Case exists with priority "High" set from the customer's original "Gold" service tier
+    When the customer's service tier is updated to "Silver"
+    Then the existing case priority remains "High" (NOT retroactively changed)
+    And only Cases created after the tier update reflect the "Silver"→Normal mapping
 
 Feature: Automatic case escalation on SLA breach
 
-  Scenario: happy — case escalated when SLA failure time is reached
-    Given a Case has an active SLA KPI with a configured failure time
-    And the case is not resolved before the failure time elapses
-    When the SLA KPI timer reaches the failure threshold
+  Scenario: happy — Gold-tier case escalated when resolution SLA (4 h) is breached
+    Given a Case has priority "High" (Gold tier) and an active SLA KPI with resolution "Failure After" = 4 hours
+    And the case is not resolved within 4 hours of creation
+    When the SLA KPI timer reaches the 4-hour failure threshold
     Then the "Is Escalated" flag on the case is set to Yes
     And the SLA failure action triggers a notification to the assigned supervisor queue
     And the case status is updated to reflect the escalation
+
+  Scenario: happy — Silver-tier case escalated when resolution SLA (8 h) is breached
+    Given a Case has priority "Normal" (Silver tier) and an active SLA KPI with resolution "Failure After" = 8 hours
+    And the case is not resolved within 8 hours of creation
+    When the SLA KPI timer reaches the 8-hour failure threshold
+    Then the "Is Escalated" flag on the case is set to Yes
+    And the SLA failure action triggers a notification to the assigned supervisor queue
+
+  Scenario: happy — Bronze-tier case escalated when resolution SLA (next business day) is breached
+    Given a Case has priority "Low" (Bronze tier) and an active SLA KPI with resolution "Failure After" = next business day
+    And the case is not resolved by the next business day
+    When the SLA KPI timer crosses the next-business-day threshold
+    Then the "Is Escalated" flag on the case is set to Yes
+    And the SLA failure action triggers a notification to the assigned supervisor queue
 
   Scenario: negative — SLA KPI paused while case is on hold
     Given a Case has an active SLA KPI
@@ -122,7 +148,13 @@ Feature: Automatic case escalation on SLA breach
 <!-- COMPILER:BEGIN nfr -->
 | Metric | Target | Source REQ |
 |--------|--------|------------|
-| agent_response | SLA KPI failure action fires within 5 minutes of the failure threshold being crossed | REQ-0004 |
+| sla_first_response_gold | First response within 1 hour for Gold (High priority) cases | REQ-0004 |
+| sla_resolution_gold | Resolution within 4 hours for Gold (High priority) cases | REQ-0004 |
+| sla_first_response_silver | First response within 4 hours for Silver (Normal priority) cases | REQ-0004 |
+| sla_resolution_silver | Resolution within 8 hours for Silver (Normal priority) cases | REQ-0004 |
+| sla_first_response_bronze | First response within 8 hours for Bronze (Low priority) cases | REQ-0004 |
+| sla_resolution_bronze | Resolution by next business day for Bronze (Low priority) cases | REQ-0004 |
+| escalation_action_latency | SLA KPI failure action fires within 5 minutes of the failure threshold being crossed | REQ-0004 |
 <!-- COMPILER:END nfr -->
 
 ## Dependency graph

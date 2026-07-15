@@ -3,8 +3,8 @@ id: FEAT-01
 title: "Case Creation from Email"
 epic: EPIC-01
 member_reqs: [REQ-0001, REQ-0002]
-spec_hash: "97b0e5a862e9ee70ac5314ae49761d3147f82e388fff113791fb94fd2549ca42"
-status: reviewed
+spec_hash: "61786ac57296e463d0f10f0c9bddd3b28e41d9a8d9f9d0a33f701ac11869c16f"
+status: approved
 ---
 
 <!-- FILL:intent -->
@@ -52,8 +52,8 @@ open ambiguities remain in REQ-0001 or REQ-0002 that block Stage 3 design.
 <!-- COMPILER:BEGIN traceability -->
 | REQ | Title | Type | Priority | Status |
 |-----|-------|------|----------|--------|
-| REQ-0001 | Agent-Initiated Case Creation from Incoming Email | functional | Must | reviewed |
-| REQ-0002 | Auto-Population of Customer from Sender Email Address Match | functional | Must | reviewed |
+| REQ-0001 | Agent-Initiated Case Creation from Incoming Email | functional | Must | approved |
+| REQ-0002 | Auto-Population of Customer from Sender Email Address Match | functional | Must | approved |
 <!-- COMPILER:END traceability -->
 
 ## Acceptance scenarios
