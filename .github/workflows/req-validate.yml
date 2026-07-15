@@ -1,0 +1,32 @@
+name: "Validate requirements (T1)"
+
+# Deterministic Tier-1 gate for Stage 1/2 output. Runs on any PR that touches
+# the atomic requirement set and blocks merge on a schema/provenance/shape
+# violation. Make this a required status check in branch protection for `main`.
+on:
+  pull_request:
+    paths:
+      - "specs/requirements/**"
+      - "specs/_schema/req.schema.json"
+      - "scripts/validate_reqs.py"
+      - ".github/workflows/req-validate.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Install validator dependencies
+        run: pip install pyyaml jsonschema
+
+      - name: Validate REQ files
+        run: python scripts/validate_reqs.py

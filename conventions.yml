@@ -1,5 +1,8 @@
 # SDD conventions - shared by the agents and validators across all stages.
 
+# --- Phase 1: Requirement Intake ---
+req_id_format: "REQ-%04d"                    # zero-padded, sequential, no gaps
+
 # --- Phase 2: Spec Authoring & Refinement ---
 baseline_tag_format: "reqs-baseline-v%d"
 nfr_categories: [agent_response, page_load, crud_action, availability, throughput]
