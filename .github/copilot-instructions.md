@@ -88,20 +88,23 @@ Run the batch in this order — **refine -> group -> compile -> freeze**:
    (Epic -> Feature -> REQ) and complete each REQ `depends_on` into an acyclic
    graph. Set `feature` and `epic` on each REQ.
 
-7. **Compile one feature spec per feature.** For each `FEAT-##`, write
-   `specs/features/FEAT-##.spec.md`. Copy the traceability table, acceptance
-   scenarios (VERBATIM from the member REQs), NFR table, dependency graph and
-   provenance into `<!-- COMPILER:BEGIN x -->...<!-- COMPILER:END x -->` zones,
-   and compute `spec_hash` (sha256 over the compiler zones) into the
-   front-matter. Author ONLY the `<!-- FILL:x -->...<!-- /FILL -->` zones
+7. **Compile one feature spec per feature.** For each `FEAT-##`, create
+   `specs/features/FEAT-##.spec.md` with the front-matter (`id`, `title`,
+   `epic`, `member_reqs`, `status`, and a placeholder `spec_hash`) and the
+   `<!-- COMPILER:BEGIN x -->...<!-- COMPILER:END x -->` /
+   `<!-- FILL:x -->...<!-- /FILL -->` zone skeleton. Author ONLY the FILL zones
    (intent, scope in/out, grounding notes, open decisions) - follow
-   `.github/prompts/spec-authoring.prompt.md`. Never hand-write compiler zones.
+   `.github/prompts/spec-authoring.prompt.md`. **Never hand-write the COMPILER
+   zones or `spec_hash`** - run `python scripts/compile_specs.py`, which fills
+   the traceability / scenarios / NFR / dependency / provenance zones VERBATIM
+   from the member REQs and computes `spec_hash`. Re-run it after any REQ change.
 
 8. **Freeze.** When every REQ is complete, grounded and consistent and every
-   feature is compiled, flip REQs to `status: approved`, write
-   `specs/_baseline/reqs-baseline-vN.md` (ids + sha256 + approver + date), and
-   open a Pull Request titled `Feature-spec: baseline vN`. **Do NOT merge** - customer
-   + architect review at Gate 2.
+   feature is compiled (`python scripts/compile_specs.py --check` and
+   `python scripts/validate_specs.py` both pass), flip REQs to `status: approved`,
+   write `specs/_baseline/reqs-baseline-vN.md` (ids + sha256 + approver + date),
+   and open a Pull Request titled `Feature-spec: baseline vN`. **Do NOT merge** -
+   customer + architect review at Gate 2.
 
 ## Phase 2 anti-patterns (never do these)
 - Guessing an open question to look complete - only a recorded decision closes it.

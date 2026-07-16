@@ -1,8 +1,8 @@
-name: "Validate requirements (T1)"
+name: "Validate features (T1)"
 
-# Deterministic Tier-1 gate for Stage 1/2 output. Runs on every PR (no path
+# Deterministic Tier-1 gate for Stage 2 output. Runs on every PR (no path
 # filter) so it can serve as an always-reported REQUIRED status check on `main`
-# without deadlocking PRs that don't touch the requirement set.
+# without deadlocking PRs that don't touch the feature specs.
 on:
   pull_request:
   workflow_dispatch:
@@ -11,7 +11,7 @@ permissions:
   contents: read
 
 jobs:
-  validate-requirements:
+  validate-features:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -23,5 +23,8 @@ jobs:
       - name: Install validator dependencies
         run: pip install pyyaml jsonschema
 
-      - name: Validate REQ files
-        run: python scripts/validate_reqs.py
+      - name: Compile check (specs in sync with REQ source)
+        run: python scripts/compile_specs.py --check
+
+      - name: Validate feature specs
+        run: python scripts/validate_specs.py
