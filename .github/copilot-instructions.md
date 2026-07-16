@@ -70,11 +70,11 @@ Run the batch in this order — **refine -> group -> compile -> freeze**:
    box. A question is closed ONLY by a recorded human decision
    (`- [x] ... - decided by <name> <date>`). Leave it open otherwise.
 
-3. **Expand the Gherkin (grounded).** Elaborate each thin statement into
+3. **Expand the Gherkin.** Elaborate each thin statement into
    `scenarios:` with `happy`, `negative`, and `boundary` kinds. Before writing
-   a criterion, confirm the capability with the **Microsoft Learn MCP**
-   (`microsoft_docs_search` / `microsoft_docs_fetch`) and cite the Learn URL
-   under a `grounding:` list. A `security` REQ **must** have a negative scenario.
+   a criterion, keep it behaviour-focused and traceable to a reviewed REQ
+   or a recorded decision, listing those evidence references (REQ ids /
+   decisions) under a `grounding:` list. Platform feasibility is NOT decided here - that is Stage 3 Design. A `security` REQ **must** have a negative scenario.
 
 4. **Attach structured NFRs.** Latency/throughput/availability become
    `nfr: [{ metric, target }]` objects drawn from `conventions.yml`
@@ -99,7 +99,7 @@ Run the batch in this order — **refine -> group -> compile -> freeze**:
    the traceability / scenarios / NFR / dependency / provenance zones VERBATIM
    from the member REQs and computes `spec_hash`. Re-run it after any REQ change.
 
-8. **Freeze.** When every REQ is complete, grounded and consistent and every
+8. **Freeze.** When every REQ is complete, evidence-grounded and consistent and every
    feature is compiled (`python scripts/compile_specs.py --check` and
    `python scripts/validate_specs.py` both pass), flip REQs to `status: approved`,
    write `specs/_baseline/reqs-baseline-vN.md` (ids + sha256 + approver + date),
@@ -108,7 +108,7 @@ Run the batch in this order — **refine -> group -> compile -> freeze**:
 
 ## Phase 2 anti-patterns (never do these)
 - Guessing an open question to look complete - only a recorded decision closes it.
-- Inventing a capability - ground every non-trivial criterion on Microsoft Learn.
+- Asserting platform feasibility - that is Stage 3 Design's call; surface doubts as open questions.
 - Free-text NFRs ("should be fast") - use `{ metric, target }`.
 - Hand-writing or editing a `COMPILER` zone - those are generated + hash-guarded.
 - Silent duplicates/conflicts - reconcile explicitly or raise a question.

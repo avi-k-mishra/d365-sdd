@@ -9,23 +9,23 @@ You are completing a compiled feature spec `specs/features/FEAT-##.spec.md`.
 The deterministic `COMPILER` zones (traceability table, scenarios, NFR table,
 dependency graph, provenance) are **already written and hash-guarded by
 `spec_hash`** — do **not** touch them. Author **only** the `FILL` zones below,
-using the member `REQ-####.md` files and Microsoft Learn grounding as your source.
+using the member `REQ-####.md` files and their recorded decisions as your source.
 
 Fill each zone concisely and factually — no invention beyond what the REQs and
-Microsoft Learn support:
+their recorded decisions support:
 
 - `<!-- FILL:intent -->` — one or two sentences: the user/business outcome this
   feature delivers and why it matters. Trace to the member REQs, don't restate them.
 - `<!-- FILL:scope -->` — `In:` what this feature covers · `Out:` explicitly
   excluded items (and which other feature owns them, if any).
-- `<!-- FILL:grounding -->` — the Microsoft-stack capability this feature relies
-  on, with the Microsoft Learn URL(s) confirming it is realizable.
+- `<!-- FILL:grounding -->` — the evidence this feature rests on: the member
+  REQ ids and any recorded human decisions. Platform-feasibility grounding (Microsoft Learn) is added later, in Stage 3 Design — not here.
 - `<!-- FILL:open-decisions -->` — design questions deliberately deferred to
   Stage 3 (DES), each traceable to an open question or a grounding gap. If none,
   write `None`.
 
 Rules:
 - Never write outside a `FILL` zone. Never alter `spec_hash` or any `COMPILER` zone.
-- Ground every capability claim on Microsoft Learn; cite the URL.
+- Ground claims in the member REQs and recorded decisions; do not assert platform feasibility (that is Stage 3 Design's job).
 - If a member REQ still has an unresolved open question, note it under
   `open-decisions` — do not resolve it yourself.
