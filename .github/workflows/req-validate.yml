@@ -1,22 +1,17 @@
 name: "Validate requirements (T1)"
 
-# Deterministic Tier-1 gate for Stage 1/2 output. Runs on any PR that touches
-# the atomic requirement set and blocks merge on a schema/provenance/shape
-# violation. Make this a required status check in branch protection for `main`.
+# Deterministic Tier-1 gate for Stage 1/2 output. Runs on every PR (no path
+# filter) so it can serve as an always-reported REQUIRED status check on `main`
+# without deadlocking PRs that don't touch the requirement set.
 on:
   pull_request:
-    paths:
-      - "specs/requirements/**"
-      - "specs/_schema/req.schema.json"
-      - "scripts/validate_reqs.py"
-      - ".github/workflows/req-validate.yml"
   workflow_dispatch:
 
 permissions:
   contents: read
 
 jobs:
-  validate:
+  validate-requirements:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4

@@ -1,26 +1,17 @@
 name: "Validate features (T1)"
 
-# Deterministic Tier-1 gate for Stage 2 output. Runs on any PR that touches the
-# feature specs or the REQ set they compile from, and blocks merge on a schema,
-# membership, coverage, body-zone or spec_hash violation. Make this a required
-# status check in branch protection for `main`.
+# Deterministic Tier-1 gate for Stage 2 output. Runs on every PR (no path
+# filter) so it can serve as an always-reported REQUIRED status check on `main`
+# without deadlocking PRs that don't touch the feature specs.
 on:
   pull_request:
-    paths:
-      - "specs/features/**"
-      - "specs/requirements/**"
-      - "specs/_index/features.md"
-      - "specs/_schema/feature.schema.json"
-      - "scripts/validate_specs.py"
-      - "scripts/compile_specs.py"
-      - ".github/workflows/spec-validate.yml"
   workflow_dispatch:
 
 permissions:
   contents: read
 
 jobs:
-  validate:
+  validate-features:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
