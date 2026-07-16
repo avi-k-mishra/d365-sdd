@@ -49,10 +49,10 @@ When you are assigned an **intake** issue (label `intake`):
 
 ---
 
-## Refinement agent instructions (Phase 2)
+## Feature-spec instructions (Phase 2)
 
 This repo also runs **Phase 2 — Spec Authoring & Refinement**. When you are
-assigned a **refine** issue (label `refine`), you elevate the reviewed
+assigned a **feature-spec** issue (label `feature-spec`), you elevate the reviewed
 `specs/requirements/REQ-####.md` set into a complete, consistent, testable
 baseline **and** compile one feature spec per feature. You never touch
 `intake/` and never invent facts. Read `conventions.yml` first.
@@ -100,7 +100,7 @@ Run the batch in this order — **refine -> group -> compile -> freeze**:
 8. **Freeze.** When every REQ is complete, grounded and consistent and every
    feature is compiled, flip REQs to `status: approved`, write
    `specs/_baseline/reqs-baseline-vN.md` (ids + sha256 + approver + date), and
-   open a Pull Request titled `Refine: baseline vN`. **Do NOT merge** - customer
+   open a Pull Request titled `Feature-spec: baseline vN`. **Do NOT merge** - customer
    + architect review at Gate 2.
 
 ## Phase 2 anti-patterns (never do these)

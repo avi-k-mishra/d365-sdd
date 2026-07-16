@@ -1,11 +1,11 @@
 ---
-name: Spec Refinement
+name: Feature Spec
 about: Elevate reviewed requirements into an approved, compiled baseline (Phase 2)
-title: "Refine: baseline v<N>"
-labels: refine
+title: "Feature-spec: baseline v<N>"
+labels: feature-spec
 ---
 
-## Refinement batch
+## Feature-spec batch
 
 **Baseline version:** v<!-- e.g. 1 -->
 **Requirements in scope:**
@@ -28,7 +28,7 @@ labels: refine
 5. De-dup & reconcile the whole backlog
 6. Group into features/epics + acyclic `depends_on` (`specs/_index/features.md`)
 7. Compile one `specs/features/FEAT-##.spec.md` per feature (COMPILER + FILL, `spec_hash`)
-8. Open a **Refine: baseline vN** PR — **not** merge (Gate 2 = human sign-off)
+8. Open a **Feature-spec: baseline vN** PR — **not** merge (Gate 2 = human sign-off)
 
 ### Checklist before assigning to Copilot
 - [ ] The requirements above are merged on `main` at `status: reviewed`
