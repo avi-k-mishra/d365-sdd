@@ -1,0 +1,39 @@
+name: "Validate features (T1)"
+
+# Deterministic Tier-1 gate for Stage 2 output. Runs on any PR that touches the
+# feature specs or the REQ set they compile from, and blocks merge on a schema,
+# membership, coverage, body-zone or spec_hash violation. Make this a required
+# status check in branch protection for `main`.
+on:
+  pull_request:
+    paths:
+      - "specs/features/**"
+      - "specs/requirements/**"
+      - "specs/_index/features.md"
+      - "specs/_schema/feature.schema.json"
+      - "scripts/validate_specs.py"
+      - "scripts/compile_specs.py"
+      - ".github/workflows/spec-validate.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Install validator dependencies
+        run: pip install pyyaml jsonschema
+
+      - name: Compile check (specs in sync with REQ source)
+        run: python scripts/compile_specs.py --check
+
+      - name: Validate feature specs
+        run: python scripts/validate_specs.py

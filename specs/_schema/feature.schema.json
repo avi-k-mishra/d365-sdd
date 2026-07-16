@@ -1,0 +1,43 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://github.com/avi-k-mishra/d365-sdd/specs/_schema/feature.schema.json",
+  "title": "Feature spec (FEAT) front-matter",
+  "description": "Deterministic contract for the YAML front-matter of every specs/features/FEAT-##.spec.md file. Produced in Phase 2 (Spec Authoring). The COMPILER zones are regenerated verbatim from the member REQs by scripts/compile_specs.py and guarded by spec_hash; the FILL zones are authored by the Copilot cloud agent. Body-zone and hash rules are checked by scripts/validate_specs.py.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["id", "title", "epic", "member_reqs", "spec_hash", "status"],
+  "properties": {
+    "id": {
+      "type": "string",
+      "pattern": "^FEAT-[0-9]{2}$",
+      "description": "Zero-padded, sequential feature id (conventions.yml feature_id_format)."
+    },
+    "title": {
+      "type": "string",
+      "minLength": 1,
+      "description": "Human-readable feature name (matches specs/_index/features.md)."
+    },
+    "epic": {
+      "type": "string",
+      "pattern": "^EPIC-[0-9]{2}$",
+      "description": "Owning epic id."
+    },
+    "member_reqs": {
+      "type": "array",
+      "minItems": 1,
+      "uniqueItems": true,
+      "items": { "type": "string", "pattern": "^REQ-[0-9]{4}$" },
+      "description": "The atomic REQ ids composing this feature. Each REQ front-matter must point back with feature: <this id>."
+    },
+    "spec_hash": {
+      "type": "string",
+      "pattern": "^[a-f0-9]{64}$",
+      "description": "SHA-256 over the COMPILER zones (lowercase hex). Recomputed and checked by scripts/compile_specs.py and scripts/validate_specs.py."
+    },
+    "status": {
+      "type": "string",
+      "enum": ["draft", "reviewed", "approved", "building", "done"],
+      "description": "conventions.yml status_flow, forward-only."
+    }
+  }
+}
