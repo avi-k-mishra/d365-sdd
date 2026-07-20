@@ -8,7 +8,7 @@ Validates every specs/design/DES-##.md against:
      satisfies equals that feature's member_reqs, and no two DES design the
      same feature (no orphan design / double-claimed feature)
   4. body zones: all COMPILER + FILL zones present; FILL zones authored
-  5. all 8 decision axes present with a rationale for any escalation
+  5. all 10 decision axes present with a rationale for any escalation
   6. open_questions resolved (no unchecked '- [ ]' left in the open-questions zone)
   7. integrity: spec_hash matches the SHA-256 of the current compiler zones
 
@@ -52,6 +52,7 @@ UX_FILL_ZONES = ["surfaces", "client-logic", "components", "navigation-accessibi
 FALLBACK_AXES = [
     "logic_tier", "data_residency", "alm_boundary", "security",
     "integration", "environment", "ux_surface", "observability",
+    "batch_processing", "reporting",
 ]
 ESCALATION_RE = re.compile(r"\b(low_code|pro_code)\b", re.IGNORECASE)
 UNRESOLVED_RE = re.compile(r"(?m)^\s*[-*]\s*\[\s\]")  # an unchecked markdown checkbox
@@ -187,7 +188,7 @@ def main() -> int:
 
         check_common_zones(rel, body, C.DES_ZONES, DES_FILL_ZONES)
 
-        # 8 decision axes present, escalation rationale
+        # 10 decision axes present, escalation rationale
         dz = fill_re("decisions").search(body)
         if dz:
             dtext = dz.group(1)
