@@ -1,0 +1,266 @@
+#!/usr/bin/env python3
+"""Deterministic validator (T1 - DesValidator) for Phase 3 design & UX specs.
+
+Validates every specs/design/DES-##.md against:
+  1. specs/_schema/design.schema.json          (front-matter shape)
+  2. filename matches id; DES ids sequential, zero-padded, no gaps/dups
+  3. traceability totality: implements_feature resolves to a real FEAT spec,
+     satisfies equals that feature's member_reqs, and no two DES design the
+     same feature (no orphan design / double-claimed feature)
+  4. body zones: all COMPILER + FILL zones present; FILL zones authored
+  5. all 8 decision axes present with a rationale for any escalation
+  6. open_questions resolved (no unchecked '- [ ]' left in the open-questions zone)
+  7. integrity: spec_hash matches the SHA-256 of the current compiler zones
+
+and every specs/ux/UX-##.md against:
+  1. specs/_schema/ux.schema.json
+  2. filename/id sequencing (UX-##)
+  3. implements_design resolves to a real DES; satisfies equals that DES's satisfies
+  4. body zones present + authored; 6. open_questions resolved; 7. spec_hash intact
+
+NFR carry-over integrity is covered by scripts/compile_design.py --check (the
+compiler regenerates the carry-over table verbatim from the source REQs).
+
+Hard failures exit 1 and print ::error:: annotations (block the PR).
+"""
+from __future__ import annotations
+
+import json
+import re
+import sys
+from pathlib import Path
+
+try:
+    import yaml
+    from jsonschema import Draft202012Validator
+except ImportError as exc:  # pragma: no cover
+    print(f"::error::missing dependency: {exc}. Run: pip install pyyaml jsonschema")
+    sys.exit(2)
+
+sys.path.insert(0, str(Path(__file__).resolve().parent))
+import compile_design as C  # shared zone/hash logic - single source of truth
+
+ROOT = Path(__file__).resolve().parents[1]
+DESIGN_DIR = ROOT / "specs" / "design"
+UX_DIR = ROOT / "specs" / "ux"
+SCHEMA_DIR = ROOT / "specs" / "_schema"
+CONVENTIONS = ROOT / "conventions.yml"
+
+DES_FILL_ZONES = ["decisions", "solution", "observability", "open-questions"]
+UX_FILL_ZONES = ["surfaces", "client-logic", "components", "navigation-accessibility", "open-questions"]
+
+FALLBACK_AXES = [
+    "logic_tier", "data_residency", "alm_boundary", "security",
+    "integration", "environment", "ux_surface", "observability",
+]
+ESCALATION_RE = re.compile(r"\b(low_code|pro_code)\b", re.IGNORECASE)
+UNRESOLVED_RE = re.compile(r"(?m)^\s*[-*]\s*\[\s\]")  # an unchecked markdown checkbox
+
+errors: list[str] = []
+warnings: list[str] = []
+
+
+def err(file: str, msg: str) -> None:
+    errors.append(f"::error file={file}::{msg}")
+
+
+def fill_re(zone: str) -> re.Pattern:
+    return re.compile(rf"<!-- FILL:{re.escape(zone)} -->\n(.*?)\n<!-- /FILL -->", re.DOTALL)
+
+
+def load_decision_axes() -> list[str]:
+    if CONVENTIONS.exists():
+        try:
+            data = yaml.safe_load(CONVENTIONS.read_text(encoding="utf-8")) or {}
+            axes = data.get("decision_axes")
+            if isinstance(axes, list) and axes:
+                return [str(a) for a in axes]
+        except yaml.YAMLError:
+            pass
+    return FALLBACK_AXES
+
+
+def check_common_zones(rel, body, compiler_zones, fill_zones):
+    for name in compiler_zones:
+        if not C._zone_re(name).search(body):
+            err(rel, f"missing COMPILER zone '{name}'")
+    for name in fill_zones:
+        m = fill_re(name).search(body)
+        if not m:
+            err(rel, f"missing FILL zone '{name}'")
+        elif len(m.group(1).strip()) < 3:
+            err(rel, f"FILL zone '{name}' is empty - agent authoring required")
+    # open-questions must be resolved
+    oq = fill_re("open-questions").search(body)
+    if oq and UNRESOLVED_RE.search(oq.group(1)):
+        err(rel, "unresolved open question ('- [ ]') remains - must be closed before Gate A/B")
+
+
+def check_spec_hash(rel, fm, body, zones):
+    declared = fm.get("spec_hash")
+    actual = C.hash_compiler_zones(body, zones)
+    if isinstance(declared, str) and declared != actual:
+        err(rel, "spec_hash is stale - run: python scripts/compile_design.py")
+
+
+def check_id_sequence(seen, prefix):
+    if not seen:
+        return
+    nums = sorted(seen)
+    missing = sorted(set(range(1, nums[-1] + 1)) - set(nums))
+    if missing:
+        gaps = ", ".join(f"{prefix}-{n:02d}" for n in missing)
+        errors.append(f"::error::gap in {prefix} id sequence - missing: {gaps}")
+
+
+def main() -> int:
+    des_schema_path = SCHEMA_DIR / "design.schema.json"
+    ux_schema_path = SCHEMA_DIR / "ux.schema.json"
+    if not des_schema_path.exists() or not ux_schema_path.exists():
+        print(f"::error::schema not found under {SCHEMA_DIR}")
+        return 2
+    des_validator = Draft202012Validator(json.loads(des_schema_path.read_text(encoding="utf-8")))
+    ux_validator = Draft202012Validator(json.loads(ux_schema_path.read_text(encoding="utf-8")))
+    axes = load_decision_axes()
+
+    designs = sorted(DESIGN_DIR.glob("DES-*.md"))
+    uxs = sorted(UX_DIR.glob("UX-*.md"))
+    if not designs and not uxs:
+        print("::warning::no DES/UX specs found under specs/design/ or specs/ux/")
+        return 0
+
+    des_seen: dict[int, str] = {}
+    feature_to_des: dict[str, str] = {}
+    des_satisfies: dict[str, list] = {}
+
+    # ---- DES ----
+    for spec in designs:
+        rel = spec.relative_to(ROOT).as_posix()
+        text = spec.read_text(encoding="utf-8")
+        fm_raw, body = C.split_front_matter(text)
+        if fm_raw is None:
+            err(rel, "missing YAML front-matter delimited by '---' lines")
+            continue
+        try:
+            fm = yaml.safe_load(fm_raw) or {}
+        except yaml.YAMLError as e:
+            err(rel, f"invalid YAML front-matter: {e}")
+            continue
+        if not isinstance(fm, dict):
+            err(rel, "front-matter must be a YAML mapping")
+            continue
+        body = body or ""
+
+        for v in sorted(des_validator.iter_errors(fm), key=lambda e: list(e.path)):
+            loc = "/".join(str(p) for p in v.path) or "(root)"
+            err(rel, f"schema: {loc}: {v.message}")
+
+        did = fm.get("id")
+        if isinstance(did, str):
+            if spec.name != f"{did}.md":
+                err(rel, f"filename does not match id '{did}' (expected {did}.md)")
+            m = re.match(r"^DES-([0-9]{2})$", did)
+            if m:
+                n = int(m.group(1))
+                if n in des_seen:
+                    err(rel, f"duplicate id {did} (also in {des_seen[n]})")
+                else:
+                    des_seen[n] = rel
+            des_satisfies[did] = fm.get("satisfies") or []
+
+        # traceability totality
+        feat_id = fm.get("implements_feature")
+        feat = C.read_feat(feat_id) if isinstance(feat_id, str) else None
+        if feat is None:
+            err(rel, f"implements_feature not found or malformed: {feat_id}")
+        else:
+            ffm, _ = feat
+            member = ffm.get("member_reqs") or []
+            satisfies = fm.get("satisfies") or []
+            if sorted(satisfies) != sorted(member):
+                err(rel, f"satisfies {sorted(satisfies)} != feature {feat_id} member_reqs {sorted(member)}")
+            if isinstance(feat_id, str):
+                if feat_id in feature_to_des:
+                    err(rel, f"feature {feat_id} is also designed by {feature_to_des[feat_id]}")
+                else:
+                    feature_to_des[feat_id] = did if isinstance(did, str) else rel
+
+        check_common_zones(rel, body, C.DES_ZONES, DES_FILL_ZONES)
+
+        # 8 decision axes present, escalation rationale
+        dz = fill_re("decisions").search(body)
+        if dz:
+            dtext = dz.group(1)
+            for axis in axes:
+                if axis not in dtext:
+                    err(rel, f"decision axis '{axis}' missing from the decisions zone")
+            if ESCALATION_RE.search(dtext) and "rationale" not in dtext.lower():
+                err(rel, "logic-tier escalation (low_code/pro_code) without a recorded rationale")
+
+        check_spec_hash(rel, fm, body, C.DES_ZONES)
+
+    check_id_sequence(des_seen, "DES")
+
+    # ---- UX ----
+    ux_seen: dict[int, str] = {}
+    for spec in uxs:
+        rel = spec.relative_to(ROOT).as_posix()
+        text = spec.read_text(encoding="utf-8")
+        fm_raw, body = C.split_front_matter(text)
+        if fm_raw is None:
+            err(rel, "missing YAML front-matter delimited by '---' lines")
+            continue
+        try:
+            fm = yaml.safe_load(fm_raw) or {}
+        except yaml.YAMLError as e:
+            err(rel, f"invalid YAML front-matter: {e}")
+            continue
+        if not isinstance(fm, dict):
+            err(rel, "front-matter must be a YAML mapping")
+            continue
+        body = body or ""
+
+        for v in sorted(ux_validator.iter_errors(fm), key=lambda e: list(e.path)):
+            loc = "/".join(str(p) for p in v.path) or "(root)"
+            err(rel, f"schema: {loc}: {v.message}")
+
+        uid = fm.get("id")
+        if isinstance(uid, str):
+            if spec.name != f"{uid}.md":
+                err(rel, f"filename does not match id '{uid}' (expected {uid}.md)")
+            m = re.match(r"^UX-([0-9]{2})$", uid)
+            if m:
+                n = int(m.group(1))
+                if n in ux_seen:
+                    err(rel, f"duplicate id {uid} (also in {ux_seen[n]})")
+                else:
+                    ux_seen[n] = rel
+
+        des_id = fm.get("implements_design")
+        if not isinstance(des_id, str) or des_id not in des_satisfies:
+            err(rel, f"implements_design not found among DES specs: {des_id}")
+        else:
+            satisfies = fm.get("satisfies") or []
+            if sorted(satisfies) != sorted(des_satisfies[des_id]):
+                err(rel, f"satisfies {sorted(satisfies)} != design {des_id} satisfies {sorted(des_satisfies[des_id])}")
+
+        check_common_zones(rel, body, C.UX_ZONES, UX_FILL_ZONES)
+        check_spec_hash(rel, fm, body, C.UX_ZONES)
+
+    check_id_sequence(ux_seen, "UX")
+
+    for w in warnings:
+        print(w)
+    for e in errors:
+        print(e)
+
+    total = len(designs) + len(uxs)
+    if errors:
+        print(f"\nDesign validation FAILED: {len(errors)} error(s) across {total} spec(s).")
+        return 1
+    print(f"\nDesign validation passed: {total} spec(s), {len(warnings)} warning(s).")
+    return 0
+
+
+if __name__ == "__main__":
+    sys.exit(main())
