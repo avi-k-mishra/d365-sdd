@@ -1,0 +1,43 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://github.com/avi-k-mishra/d365-sdd/specs/_schema/design.schema.json",
+  "title": "Design spec (DES) front-matter",
+  "description": "Deterministic contract for the YAML front-matter of every specs/design/DES-##.md file. Produced in Phase 3 (Design & Solution Decomposition). The COMPILER zones (traceability chain FEAT<-REQ<-INTK, NFR carry-over, provenance) are regenerated verbatim from the member feature spec by scripts/compile_design.py and guarded by spec_hash; the FILL zones (8 decision axes + rationale, solution, observability, open-questions) are authored by the Copilot cloud agent grounded via Microsoft Learn MCP. Body-zone, traceability and hash rules are checked by scripts/validate_design.py.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["id", "title", "satisfies", "implements_feature", "spec_hash", "status"],
+  "properties": {
+    "id": {
+      "type": "string",
+      "pattern": "^DES-[0-9]{2}$",
+      "description": "Zero-padded, sequential design id (conventions.yml des_id_format)."
+    },
+    "title": {
+      "type": "string",
+      "minLength": 1,
+      "description": "Human-readable design name."
+    },
+    "satisfies": {
+      "type": "array",
+      "minItems": 1,
+      "uniqueItems": true,
+      "items": { "type": "string", "pattern": "^REQ-[0-9]{4}$" },
+      "description": "The atomic REQ ids this design satisfies. Must equal the member_reqs of implements_feature."
+    },
+    "implements_feature": {
+      "type": "string",
+      "pattern": "^FEAT-[0-9]{2}$",
+      "description": "The single approved feature spec this design realises (1:1)."
+    },
+    "spec_hash": {
+      "type": "string",
+      "pattern": "^[a-f0-9]{64}$",
+      "description": "SHA-256 over the COMPILER zones (lowercase hex). Recomputed and checked by scripts/compile_design.py and scripts/validate_design.py."
+    },
+    "status": {
+      "type": "string",
+      "enum": ["draft", "reviewed", "approved", "building", "done"],
+      "description": "conventions.yml status_flow, forward-only."
+    }
+  }
+}
