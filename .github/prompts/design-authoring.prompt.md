@@ -52,7 +52,7 @@ status: draft
 ---
 
 <!-- FILL:decisions -->
-Record all eight axes; give a grounded rationale (cite Microsoft Learn) for every
+Record all ten axes; give a grounded rationale (cite Microsoft Learn) for every
 non-trivial or escalated choice.
 
 ### logic_tier
@@ -79,6 +79,12 @@ App type, forms, views/dashboards, PCF vs OOB, navigation, accessibility (detail
 
 ### observability
 Which telemetry events / metrics / traces / alerts / audit this design emits (detail below).
+
+### batch_processing
+How the design handles bulk/high-volume or scheduled work — none, OOB bulk operations, async/background flows, or a dedicated batch mechanism. Declarative-first; justify any escalation.
+
+### reporting
+How reporting/analytics needs are met — none, OOB views/dashboards/charts, Power BI, or a dedicated analytics store. Reference the source REQs; declarative-first.
 <!-- /FILL -->
 
 <!-- FILL:solution -->

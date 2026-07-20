@@ -8,7 +8,7 @@ Validates every specs/design/DES-##.md against:
      satisfies equals that feature's member_reqs, and no two DES design the
      same feature (no orphan design / double-claimed feature)
   4. body zones: all COMPILER + FILL zones present; FILL zones authored
-  5. all 8 decision axes present with a rationale for any escalation
+  5. all 10 decision axes present with a rationale for any escalation
   6. open_questions resolved (no unchecked '- [ ]' left in the open-questions zone)
   7. integrity: spec_hash matches the SHA-256 of the current compiler zones
 
@@ -52,6 +52,11 @@ UX_FILL_ZONES = ["surfaces", "client-logic", "components", "navigation-accessibi
 FALLBACK_AXES = [
     "logic_tier", "data_residency", "alm_boundary", "security",
     "integration", "environment", "ux_surface", "observability",
+    "batch_processing", "reporting",
+]
+FALLBACK_BASELINE_AXES = [
+    "logic_tier", "data_residency", "alm_boundary", "security",
+    "integration", "environment", "ux_surface", "observability",
 ]
 ESCALATION_RE = re.compile(r"\b(low_code|pro_code)\b", re.IGNORECASE)
 UNRESOLVED_RE = re.compile(r"(?m)^\s*[-*]\s*\[\s\]")  # an unchecked markdown checkbox
@@ -78,6 +83,29 @@ def load_decision_axes() -> list[str]:
         except yaml.YAMLError:
             pass
     return FALLBACK_AXES
+
+
+def _load_conventions_list(key: str, fallback: list[str]) -> list[str]:
+    if CONVENTIONS.exists():
+        try:
+            data = yaml.safe_load(CONVENTIONS.read_text(encoding="utf-8")) or {}
+            val = data.get(key)
+            if isinstance(val, list) and val:
+                return [str(a) for a in val]
+        except yaml.YAMLError:
+            pass
+    return fallback
+
+
+def load_baseline_axes() -> list[str]:
+    # Minimum axes required of every design, including legacy ones authored
+    # before later axes were added. New designs must satisfy the full set.
+    return _load_conventions_list("decision_axes_baseline", FALLBACK_BASELINE_AXES)
+
+
+def load_legacy_designs() -> list[str]:
+    # DES ids exempt from axes added beyond the baseline until they are refreshed.
+    return _load_conventions_list("legacy_designs", [])
 
 
 def check_common_zones(rel, body, compiler_zones, fill_zones):
@@ -122,6 +150,8 @@ def main() -> int:
     des_validator = Draft202012Validator(json.loads(des_schema_path.read_text(encoding="utf-8")))
     ux_validator = Draft202012Validator(json.loads(ux_schema_path.read_text(encoding="utf-8")))
     axes = load_decision_axes()
+    baseline_axes = load_baseline_axes()
+    legacy_designs = set(load_legacy_designs())
 
     designs = sorted(DESIGN_DIR.glob("DES-*.md"))
     uxs = sorted(UX_DIR.glob("UX-*.md"))
@@ -187,11 +217,14 @@ def main() -> int:
 
         check_common_zones(rel, body, C.DES_ZONES, DES_FILL_ZONES)
 
-        # 8 decision axes present, escalation rationale
+        # decision axes present, escalation rationale.
+        # Legacy designs (listed in conventions.yml legacy_designs) only need the
+        # baseline axes until they are refreshed; all other designs need the full set.
         dz = fill_re("decisions").search(body)
         if dz:
             dtext = dz.group(1)
-            for axis in axes:
+            required_axes = baseline_axes if (isinstance(did, str) and did in legacy_designs) else axes
+            for axis in required_axes:
                 if axis not in dtext:
                     err(rel, f"decision axis '{axis}' missing from the decisions zone")
             if ESCALATION_RE.search(dtext) and "rationale" not in dtext.lower():

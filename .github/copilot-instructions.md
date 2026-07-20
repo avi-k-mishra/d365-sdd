@@ -142,9 +142,9 @@ Produce **one `specs/design/DES-##.md`** (+ **one `specs/ux/UX-##.md`** where th
 feature is user-facing), using the templates in the prompt file verbatim
 (including every `COMPILER` and `FILL` marker):
 
-1. **Record all 8 decision axes with a grounded rationale.** `logic_tier`,
+1. **Record all 10 decision axes with a grounded rationale.** `logic_tier`,
    `data_residency`, `alm_boundary`, `security`, `integration`, `environment`,
-   `ux_surface`, `observability` (`conventions.yml` `decision_axes`).
+   `ux_surface`, `observability`, `batch_processing`, `reporting` (`conventions.yml` `decision_axes`).
    **Declarative-first** (`config` → `low_code` → `pro_code`); any
    `low_code`/`pro_code` choice **must** carry a rationale
    (`escalation_requires_rationale`).

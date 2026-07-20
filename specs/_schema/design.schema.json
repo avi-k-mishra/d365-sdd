@@ -2,7 +2,7 @@
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "$id": "https://github.com/avi-k-mishra/d365-sdd/specs/_schema/design.schema.json",
   "title": "Design spec (DES) front-matter",
-  "description": "Deterministic contract for the YAML front-matter of every specs/design/DES-##.md file. Produced in Phase 3 (Design & Solution Decomposition). The COMPILER zones (traceability chain FEAT<-REQ<-INTK, NFR carry-over, provenance) are regenerated verbatim from the member feature spec by scripts/compile_design.py and guarded by spec_hash; the FILL zones (8 decision axes + rationale, solution, observability, open-questions) are authored by the Copilot cloud agent grounded via Microsoft Learn MCP. Body-zone, traceability and hash rules are checked by scripts/validate_design.py.",
+  "description": "Deterministic contract for the YAML front-matter of every specs/design/DES-##.md file. Produced in Phase 3 (Design & Solution Decomposition). The COMPILER zones (traceability chain FEAT<-REQ<-INTK, NFR carry-over, provenance) are regenerated verbatim from the member feature spec by scripts/compile_design.py and guarded by spec_hash; the FILL zones (10 decision axes + rationale, solution, observability, open-questions) are authored by the Copilot cloud agent grounded via Microsoft Learn MCP. Body-zone, traceability and hash rules are checked by scripts/validate_design.py.",
   "type": "object",
   "additionalProperties": false,
   "required": ["id", "title", "satisfies", "implements_feature", "spec_hash", "status"],
