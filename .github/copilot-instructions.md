@@ -123,3 +123,60 @@ Run the batch in this order — **refine -> group -> compile -> freeze**:
 - Free-text NFRs ("should be fast") - use `{ metric, target }`.
 - Hand-writing or editing a `COMPILER` zone - those are generated + hash-guarded.
 - Silent duplicates/conflicts - reconcile explicitly or raise a question.
+
+
+---
+
+## Design instructions (Phase 3)
+
+This repo also runs **Phase 3 — Design & Solution Decomposition**. When you are
+assigned a **design** issue (label `design`), you turn **one approved feature
+spec** `specs/features/FEAT-##.spec.md` into a solution design on the Microsoft
+stack. This is where the architect owns the **"how"** — so you **ground every
+decision** in the **Microsoft Learn MCP** (and the Dataverse / Copilot Studio /
+Azure / Bicep MCPs for live schema), never asserting an ungrounded capability.
+You never touch `intake/` or the raw REQs. Read `conventions.yml` first, then
+follow `.github/prompts/design-authoring.prompt.md`.
+
+Produce **one `specs/design/DES-##.md`** (+ **one `specs/ux/UX-##.md`** where the
+feature is user-facing), using the templates in the prompt file verbatim
+(including every `COMPILER` and `FILL` marker):
+
+1. **Record all 8 decision axes with a grounded rationale.** `logic_tier`,
+   `data_residency`, `alm_boundary`, `security`, `integration`, `environment`,
+   `ux_surface`, `observability` (`conventions.yml` `decision_axes`).
+   **Declarative-first** (`config` → `low_code` → `pro_code`); any
+   `low_code`/`pro_code` choice **must** carry a rationale
+   (`escalation_requires_rationale`).
+
+2. **Ground the "how", don't invent it.** Cite Microsoft Learn / the live
+   environment for each axis decision. Never assert a capability you have not grounded.
+
+3. **Carry NFRs over unchanged, security least-privilege.** Every source-REQ
+   `{ metric, target }` is carried verbatim (the compiler does this); grant the
+   minimum roles / field-level security the feature needs.
+
+4. **Fill the observability block** — events, metrics, traces, alerts, audit
+   (`observability_required`).
+
+5. **Resolve open questions — do NOT guess.** Record each as `- [ ]` and close
+   only with a recorded human decision (`- [x] ... — decided by <name> <date>`).
+   **No `- [ ]` may remain** before Gate A/B.
+
+6. **Compile, never hand-write COMPILER zones.** Run
+   `python scripts/compile_design.py`, which fills the traceability
+   (FEAT←REQ←INTK), NFR carry-over and provenance zones VERBATIM and computes
+   `spec_hash`. Re-run after any change.
+
+7. **Open a Pull Request** titled `Design: FEAT-## <name>` once
+   `python scripts/compile_design.py --check` and
+   `python scripts/validate_design.py` both pass. **Do NOT merge** — the
+   architect reviews the DES at **Gate A** and the customer reviews the UX at **Gate B**.
+
+## Phase 3 anti-patterns (never do these)
+- Silent pro-code — escalating past config/low-code without a recorded, grounded rationale.
+- Ungrounded "how" — asserting product capability without a Microsoft Learn / live-environment citation.
+- Over-broad security — granting more than least-privilege.
+- Skipping the UX gate — the customer (not the architect) owns the experience sign-off.
+- Designing without observability — every DES must declare what it emits.
+- Hand-writing or editing a `COMPILER` zone or `spec_hash` — those are generated + hash-guarded.
