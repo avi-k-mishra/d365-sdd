@@ -3,7 +3,6 @@ id: FEAT-02
 title: "Tiered SLA & Escalation"
 epic: EPIC-01
 member_reqs: [REQ-0003, REQ-0004]
-intake_batches: [INTK-0001]
 spec_hash: "21fa31c369310530339523fef0f25b39599ff2ef57ae373a898c2b08232d9038"
 status: approved
 ---

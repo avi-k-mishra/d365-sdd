@@ -5,7 +5,7 @@
   "description": "Deterministic contract for the YAML front-matter of every specs/features/FEAT-##.spec.md file. Produced in Phase 2 (Spec Authoring). The COMPILER zones are regenerated verbatim from the member REQs by scripts/compile_specs.py and guarded by spec_hash; the FILL zones are authored by the Copilot cloud agent. Body-zone and hash rules are checked by scripts/validate_specs.py.",
   "type": "object",
   "additionalProperties": false,
-  "required": ["id", "title", "epic", "member_reqs", "intake_batches", "spec_hash", "status"],
+  "required": ["id", "title", "epic", "member_reqs", "spec_hash", "status"],
   "properties": {
     "id": {
       "type": "string",
@@ -28,13 +28,6 @@
       "uniqueItems": true,
       "items": { "type": "string", "pattern": "^REQ-[0-9]{4}$" },
       "description": "The atomic REQ ids composing this feature. Each REQ front-matter must point back with feature: <this id>."
-    },
-    "intake_batches": {
-      "type": "array",
-      "minItems": 1,
-      "uniqueItems": true,
-      "items": { "type": "string", "pattern": "^INTK-[0-9]{4}$" },
-      "description": "The intake batches that produced this feature's member REQs (the union of their intake_batch). validate_specs.py checks it equals that union."
     },
     "spec_hash": {
       "type": "string",

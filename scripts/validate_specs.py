@@ -6,7 +6,6 @@ Validates every specs/features/FEAT-##.spec.md against:
   2. filename matches id; FEAT ids are sequential, zero-padded, no gaps/dups
   3. membership: every member REQ exists, and each member REQ front-matter
      points back with feature: <this FEAT> and epic: <this EPIC>
-  3d. intake_batches equals the union of the members' intake_batch
   4. coverage: every REQ that declares feature: FEAT-XX is listed in that
      feature's member_reqs (no orphaned or mis-filed requirements)
   5. body zones: all COMPILER + FILL zones present; FILL zones are authored
@@ -105,7 +104,6 @@ def main() -> int:
 
         # 3. membership: each member REQ exists and points back
         epic = fm.get("epic")
-        member_batches: set[str] = set()
         for rid in fm.get("member_reqs") or []:
             r = C.read_req(rid)
             if r is None:
@@ -116,22 +114,10 @@ def main() -> int:
                 err(rel, f"{rid} front-matter feature is '{rfm.get('feature')}', expected '{fid}'")
             if rfm.get("epic") != epic:
                 err(rel, f"{rid} front-matter epic is '{rfm.get('epic')}', expected '{epic}'")
-            mb = rfm.get("intake_batch")
-            if isinstance(mb, str):
-                member_batches.add(mb)
             if rid in req_to_feature:
                 err(rel, f"{rid} is also a member of {req_to_feature[rid]}")
             else:
                 req_to_feature[rid] = fid
-
-        # 3d. intake_batches must equal the union of the members' intake_batch
-        declared_batches = set(fm.get("intake_batches") or [])
-        if declared_batches != member_batches:
-            err(
-                rel,
-                f"intake_batches {sorted(declared_batches)} does not match the union of "
-                f"member REQ intake_batch {sorted(member_batches)}",
-            )
 
         # 5. body zones
         body = body or ""
