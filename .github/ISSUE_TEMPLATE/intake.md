@@ -23,3 +23,8 @@ labels: intake
 - [ ] Documents are committed under the intake path above
 - [ ] Files are born-digital Office/PDF (`.docx` / `.xlsx` / `.pptx` / `.pdf`)
 - [ ] I will **assign this issue to Copilot** (or comment `@copilot`) to start extraction
+
+> The agent assigns this intake a stable **`INTK-####`** id, records it in
+> `intake/_index.md`, and stamps `intake_batch: INTK-####` on every requirement it
+> drafts — so the resulting REQs/features stay traceable to this intake. You do not
+> need to pick the number.
