@@ -3,6 +3,7 @@ id: FEAT-03
 title: "Automated Case Escalation & Supervisor Notifications"
 epic: EPIC-01
 member_reqs: [REQ-0005, REQ-0006, REQ-0007, REQ-0008]
+intake_batches: [INTK-0002]
 spec_hash: "c0ab09ecd8d7d04d27f6f58a8910a5e206499b8fdff4dca7c7b13f6cd3759d8c"
 status: approved
 ---
