@@ -35,8 +35,10 @@ When you are assigned an **intake** issue (label `intake`):
    (`conventions.yml` `intake_batch_format`) by reading `intake/_index.md`, and add
    a row there (`INTK id | folder | intake issue # | date | submitter | REQ range |
    status`). Stamp that same `intake_batch: INTK-####` on **every** REQ produced from
-   this intake. This is how each requirement (and later, feature) stays traceable to
+   this intake. This is how each requirement stays traceable to
    the intake that drove it, independent of the sequential REQ/FEAT numbering.
+   (Features inherit this trail through their member REQs - they do not store
+   their own intake ids.)
 
 5. **Flag, don't fabricate.** If a document is scanned, image-only, empty, or
    garbled, do NOT invent content. Add a note in the PR body listing the file and
@@ -99,11 +101,9 @@ Run the batch in this order — **refine -> group -> compile -> freeze**:
 
 7. **Compile one feature spec per feature.** For each `FEAT-##`, create
    `specs/features/FEAT-##.spec.md` with the front-matter (`id`, `title`,
-   `epic`, `member_reqs`, `intake_batches`, `status`, and a placeholder `spec_hash`)
+   `epic`, `member_reqs`, `status`, and a placeholder `spec_hash`)
    and the `<!-- COMPILER:BEGIN x -->...<!-- COMPILER:END x -->` /
-   `<!-- FILL:x -->...<!-- /FILL -->` zone skeleton. Set `intake_batches` to the
-   union of the member REQs' `intake_batch` (so the feature traces back to the
-   intakes that drove it; `validate_specs.py` checks this equality). Author ONLY the
+   `<!-- FILL:x -->...<!-- /FILL -->` zone skeleton. Author ONLY the
    FILL zones (intent, scope in/out, grounding notes, open decisions) - follow
    `.github/prompts/spec-authoring.prompt.md`. **Never hand-write the COMPILER
    zones or `spec_hash`** - run `python scripts/compile_specs.py`, which fills
