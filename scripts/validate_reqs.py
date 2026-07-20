@@ -4,6 +4,7 @@
 Validates every specs/requirements/REQ-####.md against:
   1. specs/_schema/req.schema.json           (front-matter shape)
   2. provenance: source_file must exist under intake/
+  2b. intake_batch must be a batch registered in intake/_index.md
   3. id sequencing: REQ ids are sequential, zero-padded, no gaps/dups
   4. body sections: a testable statement + '## Acceptance scenarios'
      containing a ```gherkin block
@@ -28,9 +29,11 @@ except ImportError as exc:  # pragma: no cover
 ROOT = Path(__file__).resolve().parents[1]
 REQ_DIR = ROOT / "specs" / "requirements"
 SCHEMA_PATH = ROOT / "specs" / "_schema" / "req.schema.json"
+REGISTRY_PATH = ROOT / "intake" / "_index.md"
 
 FRONT_MATTER = re.compile(r"^---\n(.*?)\n---\n(.*)$", re.DOTALL)
 GHERKIN_BLOCK = re.compile(r"```gherkin\b.*?```", re.DOTALL)
+INTK_ROW = re.compile(r"(?m)^\|\s*(INTK-[0-9]{4})\s*\|")
 
 errors: list[str] = []
 warnings: list[str] = []
@@ -42,6 +45,13 @@ def err(file: str, msg: str) -> None:
 
 def warn(file: str, msg: str) -> None:
     warnings.append(f"::warning file={file}::{msg}")
+
+
+def load_registry() -> list[str]:
+    """Return the INTK-#### ids listed in the intake registry, in file order."""
+    if not REGISTRY_PATH.exists():
+        return []
+    return INTK_ROW.findall(REGISTRY_PATH.read_text(encoding="utf-8"))
 
 
 def split_front_matter(text: str):
@@ -63,6 +73,26 @@ def main() -> int:
         return 0
 
     seen_ids: dict[int, str] = {}
+    registry = load_registry()
+    registry_set = set(registry)
+    used_batches: set[str] = set()
+
+    # registry integrity: present, unique, sequential
+    if not REGISTRY_PATH.exists():
+        errors.append("::error::intake registry not found: intake/_index.md")
+    else:
+        seen_batch: set[str] = set()
+        nums: list[int] = []
+        for b in registry:
+            if b in seen_batch:
+                errors.append(f"::error file=intake/_index.md::duplicate intake batch id {b}")
+            seen_batch.add(b)
+            nums.append(int(b.split("-")[1]))
+        if nums:
+            missing = sorted(set(range(1, max(nums) + 1)) - set(nums))
+            if missing:
+                gaps = ", ".join(f"INTK-{n:04d}" for n in missing)
+                errors.append(f"::error file=intake/_index.md::gap in INTK id sequence - missing: {gaps}")
 
     for f in files:
         rel = f.relative_to(ROOT).as_posix()
@@ -97,6 +127,13 @@ def main() -> int:
         if isinstance(src, str) and src.startswith("intake/"):
             if not (ROOT / src).exists():
                 err(rel, f"source_file does not exist on disk: {src}")
+
+        # 2b. intake batch must be registered in intake/_index.md
+        batch = fm.get("intake_batch")
+        if isinstance(batch, str):
+            used_batches.add(batch)
+            if registry_set and batch not in registry_set:
+                err(rel, f"intake_batch {batch} is not registered in intake/_index.md")
 
         # id sequencing bookkeeping
         if isinstance(fid, str):
@@ -134,6 +171,11 @@ def main() -> int:
         if missing:
             gaps = ", ".join(f"REQ-{n:04d}" for n in missing)
             errors.append(f"::error::gap in REQ id sequence - missing: {gaps}")
+
+    # 3c. coverage: every registered intake batch should yield at least one REQ
+    for b in registry:
+        if b not in used_batches:
+            warn("intake/_index.md", f"intake batch {b} has no requirements referencing it")
 
     for w in warnings:
         print(w)
