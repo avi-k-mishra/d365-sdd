@@ -2,6 +2,8 @@
 
 # --- Phase 1: Requirement Intake ---
 req_id_format: "REQ-%04d"                    # zero-padded, sequential, no gaps
+intake_batch_format: "INTK-%04d"             # zero-padded, sequential intake-batch id
+intake_registry: "intake/_index.md"          # INTK-#### -> folder / issue / REQ range
 
 # --- Phase 2: Spec Authoring & Refinement ---
 baseline_tag_format: "reqs-baseline-v%d"

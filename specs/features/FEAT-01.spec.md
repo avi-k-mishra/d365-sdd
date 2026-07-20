@@ -3,6 +3,7 @@ id: FEAT-01
 title: "Case Creation from Email"
 epic: EPIC-01
 member_reqs: [REQ-0001, REQ-0002]
+intake_batches: [INTK-0001]
 spec_hash: "df223fef47408d0e7b5c62577da6601078df5f6b0d77e9d9fe1ffd9dfabfad55"
 status: approved
 ---

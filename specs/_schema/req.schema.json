@@ -5,7 +5,7 @@
   "description": "Deterministic contract for the YAML front-matter of every specs/requirements/REQ-####.md file. Intake (Phase 1) must satisfy the required provenance core; refinement (Phase 2) adds the enrichment fields. Body-section rules (Acceptance scenarios / NFR / Notes) are checked separately by scripts/validate_reqs.py.",
   "type": "object",
   "additionalProperties": false,
-  "required": ["id", "source_file", "location", "author", "sha256", "confidence"],
+  "required": ["id", "source_file", "intake_batch", "location", "author", "sha256", "confidence"],
   "properties": {
     "id": {
       "type": "string",
@@ -16,6 +16,11 @@
       "type": "string",
       "pattern": "^intake/.+",
       "description": "Path to the evidence document under intake/ (validator also checks it exists on disk)."
+    },
+    "intake_batch": {
+      "type": "string",
+      "pattern": "^INTK-[0-9]{4}$",
+      "description": "The intake batch (a registry id in intake/_index.md) whose documents this requirement was extracted from. Written at intake (Phase 1); the validator checks it is registered."
     },
     "location": {
       "type": "string",

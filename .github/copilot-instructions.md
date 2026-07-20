@@ -22,6 +22,7 @@ When you are assigned an **intake** issue (label `intake`):
    ---
    id: REQ-0001
    source_file: intake/contoso/2026-07-09/spec.docx
+   intake_batch: INTK-0001           # the registry id for this intake (see step 4)
    location: "page 3, section 2.1"   # page / slide / cell
    author: "Jane Doe"                # if available in the doc
    sha256: "<hash of source file>"
@@ -30,21 +31,29 @@ When you are assigned an **intake** issue (label `intake`):
    ```
    Followed by a clear, testable requirement statement.
 
-4. **Flag, don't fabricate.** If a document is scanned, image-only, empty, or
+4. **Register the intake batch.** Assign the next sequential `INTK-####`
+   (`conventions.yml` `intake_batch_format`) by reading `intake/_index.md`, and add
+   a row there (`INTK id | folder | intake issue # | date | submitter | REQ range |
+   status`). Stamp that same `intake_batch: INTK-####` on **every** REQ produced from
+   this intake. This is how each requirement (and later, feature) stays traceable to
+   the intake that drove it, independent of the sequential REQ/FEAT numbering.
+
+5. **Flag, don't fabricate.** If a document is scanned, image-only, empty, or
    garbled, do NOT invent content. Add a note in the PR body listing the file and
    the problem (e.g. `possible_scanned_pdf`). Suggest the opt-in
    `markitdown[az-doc-intel]` fallback for that file.
 
-5. **Preserve provenance.** Every REQ must trace back to a real file + location.
+6. **Preserve provenance.** Every REQ must trace back to a real file + location.
    Never edit the raw documents in `intake/` — they are evidence, not source of truth.
 
-6. **Open a Pull Request** titled `Intake: <customer> <date>` summarizing what was
+7. **Open a Pull Request** titled `Intake: <customer> <date>` summarizing what was
    extracted and what was flagged. **Do NOT merge** — a human reviews and merges.
 
 ## Anti-patterns (never do these)
 - Guessing an ambiguous requirement to look complete — flag it instead.
 - Bundling multiple needs in one REQ.
 - Losing provenance (a REQ with no source file + location).
+- Losing the intake trail (a REQ with no `intake_batch`, or a batch missing from `intake/_index.md`).
 - Editing or deleting anything under `intake/`.
 
 ---
@@ -62,7 +71,7 @@ Run the batch in this order — **refine -> group -> compile -> freeze**:
 1. **Enrich the front-matter.** For every REQ in scope add the missing fields:
    `title`, `type` (functional|non-functional|integration|data|security|agentic),
    `module`, `priority` (MoSCoW), `status: reviewed`. Keep all existing
-   provenance (`source_file`, `location`, `author`, `sha256`, `confidence`).
+   provenance (`source_file`, `intake_batch`, `location`, `author`, `sha256`, `confidence`).
 
 2. **Resolve open questions - do NOT guess.** For each ambiguity, write a
    decision-ready question (2-3 concrete options + build implication) in the
@@ -90,10 +99,12 @@ Run the batch in this order — **refine -> group -> compile -> freeze**:
 
 7. **Compile one feature spec per feature.** For each `FEAT-##`, create
    `specs/features/FEAT-##.spec.md` with the front-matter (`id`, `title`,
-   `epic`, `member_reqs`, `status`, and a placeholder `spec_hash`) and the
-   `<!-- COMPILER:BEGIN x -->...<!-- COMPILER:END x -->` /
-   `<!-- FILL:x -->...<!-- /FILL -->` zone skeleton. Author ONLY the FILL zones
-   (intent, scope in/out, grounding notes, open decisions) - follow
+   `epic`, `member_reqs`, `intake_batches`, `status`, and a placeholder `spec_hash`)
+   and the `<!-- COMPILER:BEGIN x -->...<!-- COMPILER:END x -->` /
+   `<!-- FILL:x -->...<!-- /FILL -->` zone skeleton. Set `intake_batches` to the
+   union of the member REQs' `intake_batch` (so the feature traces back to the
+   intakes that drove it; `validate_specs.py` checks this equality). Author ONLY the
+   FILL zones (intent, scope in/out, grounding notes, open decisions) - follow
    `.github/prompts/spec-authoring.prompt.md`. **Never hand-write the COMPILER
    zones or `spec_hash`** - run `python scripts/compile_specs.py`, which fills
    the traceability / scenarios / NFR / dependency / provenance zones VERBATIM
