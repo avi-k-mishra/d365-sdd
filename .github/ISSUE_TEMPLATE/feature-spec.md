@@ -23,14 +23,15 @@ labels: feature-spec
 ### What the agent will do (see `.github/copilot-instructions.md` Phase 2)
 1. Enrich front-matter (title, type, module, priority, status)
 2. Raise open questions — **not** guess them
-3. Expand Gherkin (happy / negative / boundary), grounded on Microsoft Learn
+3. Expand Gherkin (happy / negative / boundary), grounded only in the recorded REQ evidence
 4. Attach structured NFRs `{metric, target}`
 5. De-dup & reconcile the whole backlog
 6. Group into features/epics + acyclic `depends_on` (`specs/_index/features.md`)
 7. Compile one `specs/features/FEAT-##.spec.md` per feature (COMPILER + FILL, `spec_hash`)
 8. Open a **Feature-spec: baseline vN** PR — **not** merge (Gate 2 = human sign-off)
 
+> Stage 2 stays solution-agnostic: the agent grounds only in the recorded REQ evidence and decisions. Product-capability and platform-feasibility grounding (Microsoft Learn MCP) happens in Stage 3 (Design), not here.
+
 ### Checklist before assigning to Copilot
 - [ ] The requirements above are merged on `main` at `status: reviewed`
-- [ ] The **Microsoft Learn MCP** is registered (Settings → Copilot → Cloud agent)
 - [ ] I will **assign this issue to Copilot** (or comment `@copilot`) to start refinement
