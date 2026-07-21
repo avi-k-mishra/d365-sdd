@@ -89,6 +89,13 @@ How reporting/analytics needs are met — none, OOB views/dashboards/charts, Pow
 
 <!-- FILL:solution -->
 - **components:** the concrete D365/Power Platform components realising this design.
+  List each as its own granular unit `<name> (component_type: <type>)` so the design
+  decomposes into buildable pieces — one buildable component per type — instead of a
+  single blob. Every `component_type` MUST come from the closed vocabulary in
+  `conventions.yml` `component_types` (see `specs/_schema/component-types.md` for the
+  families + design-axis mapping). Declarative-first: prefer a `config_`/`uiux_`/`flow_`
+  type over a `code_`/`az_` type, and justify any escalation. If no type fits, raise it
+  as an open question (extend the taxonomy first) rather than inventing one silently.
 - **data_model:** tables/columns/relationships (placeholder names per conventions.yml).
 - **security[]:** the specific roles / FLS grants.
 - **integration[]:** the concrete integration points, if any.
@@ -187,6 +194,8 @@ If none, write `None.`
 ## Rules
 
 - Never write outside a `FILL` zone. Never hand-edit a `COMPILER` zone or `spec_hash`.
+- Tag every `solution.components` entry with a `component_type` from `conventions.yml`
+  `component_types` (see `specs/_schema/component-types.md`); declarative-first.
 - `satisfies` must equal the source feature's `member_reqs` (DES) / design's `satisfies` (UX).
 - Ground every "how" in Microsoft Learn / the live environment; declarative-first; least-privilege.
 - Resolve every open question with a recorded human decision before the gate.
