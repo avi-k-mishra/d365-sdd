@@ -159,16 +159,25 @@ feature is user-facing), using the templates in the prompt file verbatim
 4. **Fill the observability block** — events, metrics, traces, alerts, audit
    (`observability_required`).
 
-5. **Resolve open questions — do NOT guess.** Record each as `- [ ]` and close
+5. **Tag every component with a `component_type`.** In the `solution` FILL zone,
+   list each component as its own granular unit `<name> (component_type: <type>)`
+   using the closed vocabulary in `conventions.yml` `component_types` (families +
+   design-axis mapping in `specs/_schema/component-types.md`). One buildable
+   component per type — never a single opaque blob. Declarative-first: prefer a
+   `config_`/`uiux_`/`flow_` type over a `code_`/`az_` type, justify any escalation,
+   and if no type fits raise an open question (extend the taxonomy first) rather than
+   inventing one.
+
+6. **Resolve open questions — do NOT guess.** Record each as `- [ ]` and close
    only with a recorded human decision (`- [x] ... — decided by <name> <date>`).
    **No `- [ ]` may remain** before Gate A/B.
 
-6. **Compile, never hand-write COMPILER zones.** Run
+7. **Compile, never hand-write COMPILER zones.** Run
    `python scripts/compile_design.py`, which fills the traceability
    (FEAT←REQ←INTK), NFR carry-over and provenance zones VERBATIM and computes
    `spec_hash`. Re-run after any change.
 
-7. **Open a Pull Request** titled `Design: FEAT-## <name>` once
+8. **Open a Pull Request** titled `Design: FEAT-## <name>` once
    `python scripts/compile_design.py --check` and
    `python scripts/validate_design.py` both pass. **Do NOT merge** — the
    architect reviews the DES at **Gate A** and the customer reviews the UX at **Gate B**.
@@ -179,4 +188,7 @@ feature is user-facing), using the templates in the prompt file verbatim
 - Over-broad security — granting more than least-privilege.
 - Skipping the UX gate — the customer (not the architect) owns the experience sign-off.
 - Designing without observability — every DES must declare what it emits.
+- Untyped or blob components — a component with no `component_type`, or bundling several
+  types into one entry instead of listing one granular unit per type.
+- Inventing a `component_type` not in `conventions.yml` — extend the taxonomy first.
 - Hand-writing or editing a `COMPILER` zone or `spec_hash` — those are generated + hash-guarded.

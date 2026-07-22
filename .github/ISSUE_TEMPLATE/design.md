@@ -18,10 +18,11 @@ Feature: FEAT-##
 
 ## Contract (see .github/copilot-instructions.md — Phase 3)
 
-- [ ] Record all **8 decision axes** with a **grounded rationale**; declarative-first, justify any escalation.
+- [ ] Record all **10 decision axes** with a **grounded rationale**; declarative-first, justify any escalation.
 - [ ] Ground every "how" in **Microsoft Learn MCP** and the live environment — never assert an ungrounded capability.
 - [ ] Carry every source-REQ NFR over unchanged; security is least-privilege.
 - [ ] Fill the **observability** block (events / metrics / traces / alerts / audit).
+- [ ] Tag every component with a **`component_type`** from `conventions.yml` (`specs/_schema/component-types.md`) — one granular unit per type.
 - [ ] Close every `open_questions` with a recorded human decision (author + date) before Gate A.
 - [ ] Run `python scripts/compile_design.py` so COMPILER zones + `spec_hash` are stamped.
 

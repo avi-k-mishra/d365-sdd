@@ -8,7 +8,9 @@ Validates every specs/design/DES-##.md against:
      satisfies equals that feature's member_reqs, and no two DES design the
      same feature (no orphan design / double-claimed feature)
   4. body zones: all COMPILER + FILL zones present; FILL zones authored
-  5. all 10 decision axes present with a rationale for any escalation
+  5. all 10 decision axes present with a rationale for any escalation, and every
+     component in the solution zone tagged with a known component_type
+     (conventions.yml component_types; legacy designs exempt)
   6. open_questions resolved (no unchecked '- [ ]' left in the open-questions zone)
   7. integrity: spec_hash matches the SHA-256 of the current compiler zones
 
@@ -85,6 +87,24 @@ def load_decision_axes() -> list[str]:
     return FALLBACK_AXES
 
 
+def load_component_types() -> list[str]:
+    # The closed component_type vocabulary. Entries ending in '_*' (e.g.
+    # 'config_ai_*', 'mcs_*', 'code_webres_*') are parameterised prefixes.
+    return _load_conventions_list("component_types", [])
+
+
+COMPONENT_TYPE_RE = re.compile(r"component_type:\s*([A-Za-z0-9_]+)")
+
+
+def component_type_allowed(value: str, vocab: list[str]) -> bool:
+    if value in vocab:
+        return True
+    for entry in vocab:
+        if entry.endswith("_*") and value.startswith(entry[:-1]):
+            return True
+    return False
+
+
 def _load_conventions_list(key: str, fallback: list[str]) -> list[str]:
     if CONVENTIONS.exists():
         try:
@@ -152,6 +172,7 @@ def main() -> int:
     axes = load_decision_axes()
     baseline_axes = load_baseline_axes()
     legacy_designs = set(load_legacy_designs())
+    component_types = load_component_types()
 
     designs = sorted(DESIGN_DIR.glob("DES-*.md"))
     uxs = sorted(UX_DIR.glob("UX-*.md"))
@@ -229,6 +250,19 @@ def main() -> int:
                     err(rel, f"decision axis '{axis}' missing from the decisions zone")
             if ESCALATION_RE.search(dtext) and "rationale" not in dtext.lower():
                 err(rel, "logic-tier escalation (low_code/pro_code) without a recorded rationale")
+
+        # component_type tagging: every DES solution zone must tag its components
+        # with a component_type from the closed vocabulary (conventions.yml
+        # component_types). Legacy designs (predating the taxonomy) are exempt.
+        if not (isinstance(did, str) and did in legacy_designs) and component_types:
+            sol = fill_re("solution").search(body)
+            if sol:
+                tags = COMPONENT_TYPE_RE.findall(sol.group(1))
+                if not tags:
+                    err(rel, "solution zone has no 'component_type:' tags - tag each component (see specs/_schema/component-types.md)")
+                for t in tags:
+                    if not component_type_allowed(t, component_types):
+                        err(rel, f"unknown component_type '{t}' - not in conventions.yml component_types")
 
         check_spec_hash(rel, fm, body, C.DES_ZONES)
 
