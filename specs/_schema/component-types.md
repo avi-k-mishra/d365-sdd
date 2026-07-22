@@ -60,7 +60,9 @@ a per-component build artefact.
 ## Rules
 
 - Tag **every** component in `FILL:solution` with exactly one `component_type` from
-  the closed vocabulary (or a valid parameterised form).
+  the closed vocabulary (or a valid parameterised form). `validate_design.py`
+  enforces this per component bullet — an untagged primary bullet in the
+  `components:` list fails the gate (legacy designs are exempt).
 - **Declarative-first:** prefer a `config_` / `uiux_` / `flow_` type over a `code_` /
   `az_` type; any escalation to a pro-code type must carry the same grounded rationale
   the `logic_tier` axis records.
