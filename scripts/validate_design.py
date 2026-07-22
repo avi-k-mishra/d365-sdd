@@ -9,8 +9,8 @@ Validates every specs/design/DES-##.md against:
      same feature (no orphan design / double-claimed feature)
   4. body zones: all COMPILER + FILL zones present; FILL zones authored
   5. all 10 decision axes present with a rationale for any escalation, and every
-     component in the solution zone tagged with a known component_type
-     (conventions.yml component_types; legacy designs exempt)
+     primary component bullet in the solution zone's `components:` list is tagged
+     with a known component_type (conventions.yml component_types; legacy exempt)
   6. open_questions resolved (no unchecked '- [ ]' left in the open-questions zone)
   7. integrity: spec_hash matches the SHA-256 of the current compiler zones
 
@@ -94,6 +94,15 @@ def load_component_types() -> list[str]:
 
 
 COMPONENT_TYPE_RE = re.compile(r"component_type:\s*([A-Za-z0-9_]+)")
+
+# The `components:` sub-list inside a DES solution FILL zone: from the
+# `- **components:**` header up to the next top-level `- **<key>:**` or the
+# end of the zone. Only the bullets in this block are components to be tagged
+# (other lists like test_strategy/security legitimately have untagged bullets).
+COMPONENTS_BLOCK_RE = re.compile(
+    r"(?im)^\s*-\s*\*\*components:\*\*.*?\n(.*?)(?=^\s*-\s*\*\*|\Z)", re.DOTALL
+)
+BULLET_RE = re.compile(r"^(\s*)-\s+\S")
 
 
 def component_type_allowed(value: str, vocab: list[str]) -> bool:
@@ -251,18 +260,37 @@ def main() -> int:
             if ESCALATION_RE.search(dtext) and "rationale" not in dtext.lower():
                 err(rel, "logic-tier escalation (low_code/pro_code) without a recorded rationale")
 
-        # component_type tagging: every DES solution zone must tag its components
-        # with a component_type from the closed vocabulary (conventions.yml
-        # component_types). Legacy designs (predating the taxonomy) are exempt.
+        # component_type tagging: every component bullet in the DES solution
+        # zone's `components:` list must carry a component_type from the closed
+        # vocabulary (conventions.yml component_types). Legacy designs
+        # (predating the taxonomy) are exempt.
         if not (isinstance(did, str) and did in legacy_designs) and component_types:
             sol = fill_re("solution").search(body)
             if sol:
-                tags = COMPONENT_TYPE_RE.findall(sol.group(1))
-                if not tags:
-                    err(rel, "solution zone has no 'component_type:' tags - tag each component (see specs/_schema/component-types.md)")
-                for t in tags:
+                soltext = sol.group(1)
+                for t in COMPONENT_TYPE_RE.findall(soltext):
                     if not component_type_allowed(t, component_types):
                         err(rel, f"unknown component_type '{t}' - not in conventions.yml component_types")
+                cblock = COMPONENTS_BLOCK_RE.search(soltext)
+                if not cblock or not cblock.group(1).strip():
+                    err(rel, "solution zone has no 'components:' list - tag each component (see specs/_schema/component-types.md)")
+                else:
+                    # Enforce a component_type on every primary component bullet
+                    # (the least-indented bullets under `components:`), so nested
+                    # detail bullets are not falsely flagged.
+                    bullets = [(m.group(1), ln) for ln in cblock.group(1).splitlines()
+                               for m in [BULLET_RE.match(ln)] if m]
+                    if bullets:
+                        min_indent = min(len(indent) for indent, _ in bullets)
+                        tagged = 0
+                        for indent, ln in bullets:
+                            if len(indent) == min_indent:
+                                if "component_type:" in ln:
+                                    tagged += 1
+                                else:
+                                    err(rel, f"component without a component_type tag: {ln.strip()[:70]} (see specs/_schema/component-types.md)")
+                        if tagged == 0:
+                            err(rel, "components list has no 'component_type:' tags - tag each component (see specs/_schema/component-types.md)")
 
         check_spec_hash(rel, fm, body, C.DES_ZONES)
 
