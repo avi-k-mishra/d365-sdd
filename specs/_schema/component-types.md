@@ -57,6 +57,27 @@ a per-component build artefact.
 | `batch_processing` | `flow_cloud`, `az_func_scheduled`, `code_plugin`, `az_service_bus` |
 | `reporting` | `uiux_dashboard`, `uiux_chart`, `bi_` |
 
+## Skill library (map + required payload)
+
+Each `component_type` is served by one **skill** — a reusable "how-to" for building
+that kind of component, applied both when authoring a DES (Stage 3) and building it
+(Stage 4). The skill grouping is a **domain grouping layered over the type prefix**,
+so some `config_*` types are re-homed by concern (`config_audit` →
+`dataverse-security`, `config_env_variable` → `alm-packaging`, `config_ai_*` →
+`dataverse-ai`).
+
+- **Map + rollout phases:** `conventions.yml` `component_type_skills` (skill → covered
+  types) and `skill_phases` (A = active, B = deferred). All 47 types are mapped exactly
+  once. A skill lives at `.github/skills/<skill>/` = a thin `SKILL.md` router + one
+  `<component_type>.md` deep reference per covered type; that reference file **is** the
+  Stage-4 `patterns/<component_type>.md` (one canonical asset, both stages).
+- **Required payload:** `conventions.yml` `component_type_payloads` lists the minimum
+  fields each design item must declare in its `data_model` entry (falling back to
+  `_default: [name, satisfies]`). This is the single source of truth read by the prompt
+  files (guidance) and by `validate_design.py` (enforcement, Step validate-payload).
+- **Custom connectors:** `integ_connector` = a **custom** connector you author (OpenAPI
+  + auth + policies); standard/certified connectors need only an `integ_connection_ref`.
+
 ## Rules
 
 - Tag **every** component in `FILL:solution` with exactly one `component_type` from

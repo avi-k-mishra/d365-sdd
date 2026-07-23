@@ -94,3 +94,78 @@ component_types:
   # integ_ — external integration wiring
   - integ_connector
   - integ_connection_ref
+# --- Phase 3: Component-type SKILL LIBRARY (map + required-payload schema) ---
+# Single source of truth for the skill library. Read by BOTH the prompt files
+# (guidance: which skill to load per component) AND the validators (enforcement:
+# which fields a design item must carry). A skill is a DOMAIN grouping layered
+# over the component_type prefix — some `config_*` types are re-homed by concern
+# (config_audit -> dataverse-security, config_env_variable -> alm-packaging,
+# config_ai_* -> dataverse-ai). Each skill lives at `.github/skills/<skill>/`
+# with a thin `SKILL.md` (router) + one `<component_type>.md` deep reference per
+# covered type; that reference file == the Stage-4 `patterns/<component_type>.md`.
+# Wildcard members (e.g. `config_ai_*`) match the parameterised component_types.
+component_type_skills:
+  dataverse-table:      [schema_table, schema_column, schema_relationship, schema_choice, schema_key]
+  dataverse-config:     [config_sla, config_arc, config_bpf, config_business_rule, config_routing_rule, config_queue, config_assignment_rule, config_dup_detection]
+  dataverse-security:   [sec_role, sec_field_profile, sec_business_unit, sec_team, config_audit]
+  power-automate-flow:  [flow_cloud]
+  model-driven-ui:      [uiux_form, uiux_view, uiux_dashboard, uiux_chart, uiux_sitemap, uiux_app]
+  alm-packaging:        [alm_solution, alm_publisher, alm_managed_export, config_env_variable]
+  integration-wiring:   [integ_connector, integ_connection_ref]  # integ_connector = a CUSTOM connector you author (OpenAPI + auth + policies); standard/certified connectors need only integ_connection_ref
+  dataverse-ai:         [config_ai_*]
+  dataverse-procode:    [code_plugin, code_custom_api, code_pcf, code_webres_*]
+  copilot-studio-agent: [mcs_*]
+  azure-infra:          [az_apim, az_service_bus, az_key_vault, az_function_app, az_func_scheduled, az_app_insights, az_event_grid, az_ai_*]
+  power-bi-reporting:   [bi_dataset, bi_report]
+
+# Rollout phases (Phase A skills are exercised by DES-01/02; Phase B deferred).
+skill_phases:
+  A: [dataverse-table, dataverse-config, dataverse-security, power-automate-flow, model-driven-ui, alm-packaging, integration-wiring]
+  B: [dataverse-ai, dataverse-procode, copilot-studio-agent, azure-infra, power-bi-reporting]
+
+# Per-component_type REQUIRED PAYLOAD — the minimum fields a DES `FILL:solution`
+# design item must declare (in its `data_model` entry) so the mapped skill can
+# execute and `validate_design.py` can enforce it (Step validate-payload). A type
+# with no explicit entry falls back to `_default`. Every component always needs
+# `name` + `satisfies` (the REQ id(s) it traces to). Parameterised `*` types use
+# the wildcard key. Phase-B types not yet detailed rely on `_default` for now.
+component_type_payloads:
+  _default:              {required: [name, satisfies]}
+  # schema_ (dataverse-table)
+  schema_table:          {required: [name, ownership, primary_name, columns, satisfies]}
+  schema_column:         {required: [name, data_type, required_level, satisfies]}
+  schema_relationship:   {required: [name, relationship_type, related_table, satisfies]}
+  schema_choice:         {required: [name, options, satisfies]}
+  schema_key:            {required: [name, table, key_columns, satisfies]}
+  # config_ (dataverse-config)
+  config_sla:            {required: [name, applies_to, kpi, satisfies]}
+  config_arc:            {required: [name, source, target, satisfies]}
+  config_bpf:            {required: [name, table, stages, satisfies]}
+  config_business_rule:  {required: [name, table, condition, action, satisfies]}
+  config_routing_rule:   {required: [name, queue, criteria, satisfies]}
+  config_queue:          {required: [name, queue_type, satisfies]}
+  config_assignment_rule: {required: [name, queue, logic, satisfies]}
+  config_dup_detection:  {required: [name, table, match_criteria, satisfies]}
+  # sec_ + governance (dataverse-security)
+  sec_role:              {required: [name, privileges, satisfies]}
+  sec_field_profile:     {required: [name, protected_columns, grantee_roles, satisfies]}
+  sec_business_unit:     {required: [name, parent, satisfies]}
+  sec_team:              {required: [name, business_unit, roles, satisfies]}
+  config_audit:          {required: [name, scope, satisfies]}
+  # flow_ (power-automate-flow)
+  flow_cloud:            {required: [name, trigger, actions, satisfies]}
+  # uiux_ (model-driven-ui)
+  uiux_form:             {required: [name, table, form_type, sections, satisfies]}
+  uiux_view:             {required: [name, table, filter, columns, satisfies]}
+  uiux_dashboard:        {required: [name, components, roles, satisfies]}
+  uiux_chart:            {required: [name, table, series, satisfies]}
+  uiux_sitemap:          {required: [name, app, areas, satisfies]}
+  uiux_app:              {required: [name, app_type, tables, satisfies]}
+  # alm_ + config separation (alm-packaging)
+  alm_solution:          {required: [name, publisher, satisfies]}
+  alm_publisher:         {required: [name, prefix, satisfies]}
+  alm_managed_export:    {required: [name, source_solution, satisfies]}
+  config_env_variable:   {required: [name, data_type, satisfies]}
+  # integ_ (integration-wiring)
+  integ_connector:       {required: [name, connector_kind, api_spec, auth, satisfies]}
+  integ_connection_ref:  {required: [name, connector, satisfies]}
