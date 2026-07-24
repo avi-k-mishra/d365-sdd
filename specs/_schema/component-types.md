@@ -90,3 +90,56 @@ so some `config_*` types are re-homed by concern (`config_audit` →
 - Choose the **most specific** type that fits; if none fits, do not invent a type
   silently — raise it as an open question so the taxonomy can be extended in
   `conventions.yml` first.
+
+## Design-item payload contract
+
+Tagging a component with a `component_type` is only the **routing key**. For the
+mapped skill to execute and for `validate_design.py` to enforce completeness, each
+component must also **declare its required payload** — the minimum fields listed in
+`conventions.yml` `component_type_payloads.<type>.required` (falling back to
+`_default: [name, satisfies]`).
+
+**Format.** In `FILL:solution` `components:`, every component is a primary bullet
+followed by an indented sub-list of `key: value` lines — one per required field:
+
+```
+- `<name>` (component_type: <type>) — <one-line human summary> (REQ-####)
+  - satisfies: [REQ-####, ...]
+  - <required_field>: <value>
+  - <required_field>: <value>
+```
+
+Rules for the sub-list:
+
+- The backtick **`<name>`** in the bullet header **is** the required `name` field —
+  do not repeat it as a sub-line.
+- **Every other required field** for the type (including `satisfies`) appears as its
+  own indented `key: value` sub-line, using the **exact** field name from
+  `component_type_payloads` (no synonyms, no omissions, no invented fields).
+- `satisfies` is a bracketed list of REQ ids: `satisfies: [REQ-0005]`. It must be a
+  subset of the design's front-matter `satisfies`.
+- Multi-valued fields use an inline list: `columns: [cr_escalated, cr_escalation_notes]`.
+- Parameterised types (`config_ai_*`, `code_webres_*`, `mcs_*`, `az_ai_*`) resolve to
+  their concrete form and use that type's payload, or `_default` if none is detailed.
+- The prose summary + `(REQ-####)` on the header line stay for readability; the
+  sub-list is the machine-checked contract. A separate narrative `data_model:` block
+  may still give a cross-cutting overview, but the per-component sub-lists are
+  authoritative for `schema_*` (and all other) payloads.
+
+**Worked example** (a `schema_table` and one of its `schema_column`s):
+
+```
+- `Escalation table` (component_type: schema_table) — new table holding escalation records (REQ-0005)
+  - satisfies: [REQ-0005]
+  - ownership: user_team
+  - primary_name: cr_name
+  - columns: [cr_escalated, cr_escalation_notes]
+- `cr_escalated column` (component_type: schema_column) — Boolean escalation state, default false (REQ-0005)
+  - satisfies: [REQ-0005]
+  - data_type: Boolean
+  - required_level: none
+```
+
+`validate_design.py` reads the same `component_type_payloads` map (Step
+validate-payload) and fails any component missing a required sub-line — the skill
+guidance and the gate share one source of truth.
