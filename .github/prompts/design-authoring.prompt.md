@@ -98,7 +98,7 @@ How reporting/analytics needs are met — none, OOB views/dashboards/charts, Pow
   as an open question (extend the taxonomy first) rather than inventing one silently.
   Then, **for each component, run its skill and declare its required payload:**
   1. Look up the `component_type` in `conventions.yml` `component_type_skills` → the
-     **skill** name; load `.github/skills/<skill>/` (`SKILL.md` + the matching
+     **skill** name; load `.github/skills/build/<skill>/` (`SKILL.md` + the matching
      `<component_type>.md` reference) and follow its Decision guide / Anti-patterns.
   2. Beneath the component bullet, add an indented `key: value` sub-list declaring the
      **required payload** — one line per field in `conventions.yml`

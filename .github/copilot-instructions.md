@@ -170,7 +170,7 @@ feature is user-facing), using the templates in the prompt file verbatim
    Then, **for each component, apply its skill deterministically:**
    (a) look up the component's `component_type` in `conventions.yml`
    `component_type_skills` to find its **skill**; (b) load that skill from
-   `.github/skills/<skill>/` (thin `SKILL.md` + the `<component_type>.md` reference)
+   `.github/skills/build/<skill>/` (thin `SKILL.md` + the `<component_type>.md` reference)
    and follow its guidance; (c) declare the component's **required payload** as an
    indented `key: value` sub-list beneath the bullet — one line per field in
    `conventions.yml` `component_type_payloads.<type>.required` (the backtick name is

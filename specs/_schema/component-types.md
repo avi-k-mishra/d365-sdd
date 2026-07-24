@@ -68,7 +68,7 @@ so some `config_*` types are re-homed by concern (`config_audit` →
 
 - **Map + rollout phases:** `conventions.yml` `component_type_skills` (skill → covered
   types) and `skill_phases` (A = active, B = deferred). All 47 types are mapped exactly
-  once. A skill lives at `.github/skills/<skill>/` = a thin `SKILL.md` router + one
+  once. A skill lives at `.github/skills/build/<skill>/` = a thin `SKILL.md` router + one
   `<component_type>.md` deep reference per covered type; that reference file **is** the
   Stage-4 `patterns/<component_type>.md` (one canonical asset, both stages).
 - **Required payload:** `conventions.yml` `component_type_payloads` lists the minimum
@@ -78,7 +78,7 @@ so some `config_*` types are re-homed by concern (`config_audit` →
 - **Custom connectors:** `integ_connector` = a **custom** connector you author (OpenAPI
   + auth + policies); standard/certified connectors need only an `integ_connection_ref`.
 - **Integrity gate:** `scripts/validate_skills.py` (workflow `skills-validate.yml`) keeps
-  the map, `component_type_payloads`, and the authored `.github/skills/` files mutually
+  the map, `component_type_payloads`, and the authored `.github/skills/build/` files mutually
   consistent — every type is covered by exactly one skill, every payload key is a real
   type, and every authored skill folder has a `SKILL.md` (with `name`/`description`) plus
   one `<component_type>.md` reference per covered type (wildcard `x_*` → `x.md`); no
