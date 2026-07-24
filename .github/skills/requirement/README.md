@@ -1,12 +1,18 @@
 # Requirement-stage skills (Stage 1 — Intake)
 
-Reserved for the **requirement**-stage skill library. Each skill here will be a
-reusable "how-to" the GitHub Copilot cloud agent loads while drafting atomic
-`REQ-####.md` files from born-digital intake documents (Stage 1).
+Reusable "how-to" skills the agent (GitHub cloud agent, or VS Code Copilot) loads
+while drafting atomic `REQ-####.md` files from born-digital intake documents.
 
 Same folder convention as [`../build/`](../build/): one folder per skill =
-a thin `SKILL.md` router (frontmatter `name`/`description`/`allowed-tools` +
-when-to-use) plus one deep reference file per covered concern.
+a `SKILL.md` (frontmatter `name`/`description`/`allowed-tools` + when-to-use +
+mechanical process + ground rules + anti-patterns). `name` must equal the folder.
 
-Status: **not authored yet** — placeholder only. The `build/` library
-(component_type build skills) is the proven template to replicate here.
+## Skills
+
+| Skill | Covers |
+| --- | --- |
+| [`intake-conversion`](intake-conversion/) | Convert born-digital docs via the MarkItDown MCP; preserve provenance; flag scanned/garbled files. |
+| [`atomic-requirement-authoring`](atomic-requirement-authoring/) | Extract one-need-per-REQ atomic, testable requirements with provenance front-matter. |
+| [`intake-traceability`](intake-traceability/) | Assign/register `INTK-####` in the intake registry and stamp it on every REQ. |
+
+Grounded in the Phase-1 instructions in `.github/copilot-instructions.md`.

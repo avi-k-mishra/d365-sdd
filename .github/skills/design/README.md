@@ -1,17 +1,27 @@
 # Design-stage skills (Stage 3 — Design)
 
-Reserved for the **design**-stage skill library. Each skill here will be a
-reusable "how-to" the GitHub Copilot cloud agent loads while authoring the
-architect decision axes and `solution.components` of `DES-##.md` design specs
-(Stage 3), grounded via the Microsoft Learn MCP.
+Reusable "how-to" skills the agent (GitHub cloud agent, or VS Code Copilot) loads
+while turning one approved `FEAT-##.spec.md` into a `DES-##.md` (and `UX-##.md`)
+solution design on the Microsoft stack, grounded via the Microsoft Learn MCP.
 
 Same folder convention as [`../build/`](../build/): one folder per skill =
-a thin `SKILL.md` router (frontmatter `name`/`description`/`allowed-tools` +
-when-to-use) plus one deep reference file per covered concern.
+a `SKILL.md` (frontmatter `name`/`description`/`allowed-tools` + when-to-use +
+mechanical process + ground rules + anti-patterns). `name` must equal the folder.
 
-Note: the per-`component_type` how-to references already live in
-[`../build/`](../build/) (one canonical asset shared by Stage 3 authoring and
-Stage 4 build). Design-stage skills here cover cross-cutting **design method**
-(decision axes, guardrails, pattern selection), not individual component types.
+These cover the **design method** (decision axes, grounding, decomposition,
+observability, compilation). The per-`component_type` how-to references live in
+[`../build/`](../build/) — the `component-decomposition` skill hands each tagged
+component off to its build skill.
 
-Status: **not authored yet** — placeholder only.
+## Skills
+
+| Skill | Covers |
+| --- | --- |
+| [`decision-axes`](decision-axes/) | Record all ten architect decision axes with grounded, declarative-first rationale. |
+| [`grounded-architecture`](grounded-architecture/) | Ground every capability/feasibility claim in Microsoft Learn / live-environment MCPs. |
+| [`component-decomposition`](component-decomposition/) | Tag one granular unit per `component_type`; apply its build skill; declare the required payload. |
+| [`observability-design`](observability-design/) | Author the mandatory events/metrics/traces/alerts/audit block. |
+| [`design-compilation`](design-compilation/) | Author FILL zones + UX spec, run `compile_design.py`, pass Gate A/B. |
+
+Grounded in the Phase-3 instructions in `.github/copilot-instructions.md` and
+`.github/prompts/design-authoring.prompt.md`.
