@@ -159,14 +159,24 @@ feature is user-facing), using the templates in the prompt file verbatim
 4. **Fill the observability block** — events, metrics, traces, alerts, audit
    (`observability_required`).
 
-5. **Tag every component with a `component_type`.** In the `solution` FILL zone,
-   list each component as its own granular unit `<name> (component_type: <type>)`
-   using the closed vocabulary in `conventions.yml` `component_types` (families +
-   design-axis mapping in `specs/_schema/component-types.md`). One buildable
-   component per type — never a single opaque blob. Declarative-first: prefer a
-   `config_`/`uiux_`/`flow_` type over a `code_`/`az_` type, justify any escalation,
-   and if no type fits raise an open question (extend the taxonomy first) rather than
-   inventing one.
+5. **Tag every component AND declare its required payload.** In the `solution`
+   FILL zone, list each component as its own granular unit
+   `<name> (component_type: <type>)` using the closed vocabulary in
+   `conventions.yml` `component_types` (families + design-axis mapping in
+   `specs/_schema/component-types.md`). One buildable component per type — never a
+   single opaque blob. Declarative-first: prefer a `config_`/`uiux_`/`flow_` type
+   over a `code_`/`az_` type, justify any escalation, and if no type fits raise an
+   open question (extend the taxonomy first) rather than inventing one.
+   Then, **for each component, apply its skill deterministically:**
+   (a) look up the component's `component_type` in `conventions.yml`
+   `component_type_skills` to find its **skill**; (b) load that skill from
+   `.github/skills/<skill>/` (thin `SKILL.md` + the `<component_type>.md` reference)
+   and follow its guidance; (c) declare the component's **required payload** as an
+   indented `key: value` sub-list beneath the bullet — one line per field in
+   `conventions.yml` `component_type_payloads.<type>.required` (the backtick name is
+   the `name` field; `satisfies` + type-specific fields are sub-lines), exactly as
+   specified by the *Design-item payload contract* in
+   `specs/_schema/component-types.md`. Do not invent or omit required fields.
 
 6. **Resolve open questions — do NOT guess.** Record each as `- [ ]` and close
    only with a recorded human decision (`- [x] ... — decided by <name> <date>`).
