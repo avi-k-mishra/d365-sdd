@@ -77,6 +77,12 @@ so some `config_*` types are re-homed by concern (`config_audit` →
   files (guidance) and by `validate_design.py` (enforcement, Step validate-payload).
 - **Custom connectors:** `integ_connector` = a **custom** connector you author (OpenAPI
   + auth + policies); standard/certified connectors need only an `integ_connection_ref`.
+- **Integrity gate:** `scripts/validate_skills.py` (workflow `skills-validate.yml`) keeps
+  the map, `component_type_payloads`, and the authored `.github/skills/` files mutually
+  consistent — every type is covered by exactly one skill, every payload key is a real
+  type, and every authored skill folder has a `SKILL.md` (with `name`/`description`) plus
+  one `<component_type>.md` reference per covered type (wildcard `x_*` → `x.md`); no
+  orphan reference files. Skills not yet authored (no folder) are skipped as deferred.
 
 ## Rules
 
