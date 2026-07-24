@@ -8,9 +8,11 @@ Validates every specs/design/DES-##.md against:
      satisfies equals that feature's member_reqs, and no two DES design the
      same feature (no orphan design / double-claimed feature)
   4. body zones: all COMPILER + FILL zones present; FILL zones authored
-  5. all 10 decision axes present with a rationale for any escalation, and every
+  5. all 10 decision axes present with a rationale for any escalation; every
      primary component bullet in the solution zone's `components:` list is tagged
-     with a known component_type (conventions.yml component_types; legacy exempt)
+     with a known component_type (conventions.yml component_types); and every such
+     component declares its per-type required payload as `- <field>:` sub-lines
+     (conventions.yml component_type_payloads; legacy + legacy_payload designs exempt)
   6. open_questions resolved (no unchecked '- [ ]' left in the open-questions zone)
   7. integrity: spec_hash matches the SHA-256 of the current compiler zones
 
@@ -94,6 +96,8 @@ def load_component_types() -> list[str]:
 
 
 COMPONENT_TYPE_RE = re.compile(r"component_type:\s*([A-Za-z0-9_]+)")
+# A payload sub-line beneath a component bullet: `  - <field>: <value>`.
+SUBKEY_RE = re.compile(r"^\s*-\s*([A-Za-z0-9_]+)\s*:")
 
 # The `components:` sub-list inside a DES solution FILL zone: from the
 # `- **components:**` header up to the next top-level `- **<key>:**` or the
@@ -135,6 +139,40 @@ def load_baseline_axes() -> list[str]:
 def load_legacy_designs() -> list[str]:
     # DES ids exempt from axes added beyond the baseline until they are refreshed.
     return _load_conventions_list("legacy_designs", [])
+
+
+def load_legacy_payload_designs() -> list[str]:
+    # DES ids that predate the Design-item payload contract; exempt from per-type
+    # required-payload enforcement until refreshed.
+    return _load_conventions_list("legacy_payload_designs", [])
+
+
+def load_component_payloads() -> dict:
+    # Map: component_type -> {"required": [field, ...]}. Single source of truth for
+    # the minimum fields each design item must declare (see the Design-item payload
+    # contract in specs/_schema/component-types.md). Wildcard keys end in '_*'.
+    if CONVENTIONS.exists():
+        try:
+            data = yaml.safe_load(CONVENTIONS.read_text(encoding="utf-8")) or {}
+            val = data.get("component_type_payloads")
+            if isinstance(val, dict) and val:
+                return val
+        except yaml.YAMLError:
+            pass
+    return {}
+
+
+def required_fields_for(ctype: str, payloads: dict) -> list[str]:
+    entry = payloads.get(ctype)
+    if entry is None:
+        for key, val in payloads.items():
+            if key.endswith("_*") and ctype.startswith(key[:-1]):
+                entry = val
+                break
+    if entry is None:
+        entry = payloads.get("_default", {"required": ["name", "satisfies"]})
+    req = entry.get("required") if isinstance(entry, dict) else None
+    return [str(f) for f in (req or ["name", "satisfies"])]
 
 
 def check_common_zones(rel, body, compiler_zones, fill_zones):
@@ -181,7 +219,9 @@ def main() -> int:
     axes = load_decision_axes()
     baseline_axes = load_baseline_axes()
     legacy_designs = set(load_legacy_designs())
+    legacy_payload_designs = set(load_legacy_payload_designs())
     component_types = load_component_types()
+    component_payloads = load_component_payloads()
 
     designs = sorted(DESIGN_DIR.glob("DES-*.md"))
     uxs = sorted(UX_DIR.glob("UX-*.md"))
@@ -291,6 +331,36 @@ def main() -> int:
                                     err(rel, f"component without a component_type tag: {ln.strip()[:70]} (see specs/_schema/component-types.md)")
                         if tagged == 0:
                             err(rel, "components list has no 'component_type:' tags - tag each component (see specs/_schema/component-types.md)")
+
+                        # Per-type required payload: every primary component must
+                        # declare its conventions.yml component_type_payloads fields
+                        # as indented `- <field>:` sub-lines (name comes from the
+                        # bullet header). Designs predating the payload contract
+                        # (conventions.yml legacy_payload_designs) are exempt.
+                        payload_exempt = isinstance(did, str) and (
+                            did in legacy_designs or did in legacy_payload_designs
+                        )
+                        if not payload_exempt and component_payloads:
+                            comps: list[dict] = []
+                            current: dict | None = None
+                            for indent, ln in bullets:
+                                if len(indent) == min_indent:
+                                    tm = COMPONENT_TYPE_RE.search(ln)
+                                    current = {"ctype": tm.group(1) if tm else None,
+                                               "line": ln, "keys": set()}
+                                    comps.append(current)
+                                elif current is not None and len(indent) > min_indent:
+                                    km = SUBKEY_RE.match(ln)
+                                    if km:
+                                        current["keys"].add(km.group(1))
+                            for comp in comps:
+                                if not comp["ctype"]:
+                                    continue
+                                for field in required_fields_for(comp["ctype"], component_payloads):
+                                    if field == "name":
+                                        continue
+                                    if field not in comp["keys"]:
+                                        err(rel, f"component '{comp['line'].strip()[:50]}' ({comp['ctype']}) missing required payload field '{field}' (see the Design-item payload contract in specs/_schema/component-types.md)")
 
         check_spec_hash(rel, fm, body, C.DES_ZONES)
 
