@@ -1,0 +1,33 @@
+name: "Validate skills (T1)"
+
+# Deterministic Tier-1 gate for the component_type skill library. Verifies the
+# conventions.yml map/payload and the authored .github/skills/ files stay
+# mutually consistent (Phase-B skills with no folder yet are skipped).
+on:
+  pull_request:
+    paths:
+      - "conventions.yml"
+      - ".github/skills/**"
+      - "scripts/validate_skills.py"
+      - ".github/workflows/skills-validate.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  validate-skills:
+    name: "Validate skills"
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Install validator dependencies
+        run: pip install pyyaml
+
+      - name: Validate skill library
+        run: python scripts/validate_skills.py
