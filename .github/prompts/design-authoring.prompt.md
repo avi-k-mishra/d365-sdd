@@ -96,7 +96,27 @@ How reporting/analytics needs are met — none, OOB views/dashboards/charts, Pow
   families + design-axis mapping). Declarative-first: prefer a `config_`/`uiux_`/`flow_`
   type over a `code_`/`az_` type, and justify any escalation. If no type fits, raise it
   as an open question (extend the taxonomy first) rather than inventing one silently.
-- **data_model:** tables/columns/relationships (placeholder names per conventions.yml).
+  Then, **for each component, run its skill and declare its required payload:**
+  1. Look up the `component_type` in `conventions.yml` `component_type_skills` → the
+     **skill** name; load `.github/skills/<skill>/` (`SKILL.md` + the matching
+     `<component_type>.md` reference) and follow its Decision guide / Anti-patterns.
+  2. Beneath the component bullet, add an indented `key: value` sub-list declaring the
+     **required payload** — one line per field in `conventions.yml`
+     `component_type_payloads.<type>.required` (`_default: [name, satisfies]` if the
+     type has no explicit entry). The backtick `<name>` is the `name` field; every
+     other required field (incl. `satisfies: [REQ-####]`) is its own sub-line, using
+     the exact field name. Follow the *Design-item payload contract* in
+     `specs/_schema/component-types.md` verbatim. Example:
+
+     ```
+     - `Escalation table` (component_type: schema_table) — new escalation table (REQ-0005)
+       - satisfies: [REQ-0005]
+       - ownership: user_team
+       - primary_name: cr_name
+       - columns: [cr_escalated, cr_escalation_notes]
+     ```
+- **data_model:** optional cross-cutting narrative of the tables/columns/relationships
+  (the authoritative per-`schema_*` payload lives in each component's sub-list above).
 - **security[]:** the specific roles / FLS grants.
 - **integration[]:** the concrete integration points, if any.
 - **test_strategy[]:** how the carried-over Gherkin scenarios become Stage-5 tests
