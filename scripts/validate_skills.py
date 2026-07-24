@@ -5,7 +5,7 @@ Verifies that the three sources of truth stay mutually consistent:
   1. conventions.yml `component_type_skills` (skill -> covered component_types)
   2. conventions.yml `component_types` (the closed vocabulary) and
      `component_type_payloads` (per-type required fields)
-  3. the authored skill files under .github/skills/<skill>/
+  3. the authored skill files under .github/skills/build/<skill>/
 
 Checks:
   A. Map integrity — every component_type in the vocabulary is covered by exactly
@@ -14,7 +14,7 @@ Checks:
   B. Payload homes — every `component_type_payloads` key (except `_default`) is a
      real component_type in the vocabulary.
   C. Authored skills — for every skill whose folder already exists under
-     .github/skills/, require a SKILL.md carrying `name`/`description`
+     .github/skills/build/, require a SKILL.md carrying `name`/`description`
      front-matter and one `<component_type>.md` reference per covered type. A
      wildcard type `x_*` maps to the reference file `x.md`.
   D. No orphans — every `<skill>/*.md` (other than SKILL.md) corresponds to a
@@ -39,7 +39,7 @@ except ImportError as exc:  # pragma: no cover
 
 ROOT = Path(__file__).resolve().parents[1]
 CONVENTIONS = ROOT / "conventions.yml"
-SKILLS_DIR = ROOT / ".github" / "skills"
+SKILLS_DIR = ROOT / ".github" / "skills" / "build"
 
 FRONT_MATTER = re.compile(r"^---\n(.*?)\n---", re.DOTALL)
 
@@ -126,7 +126,7 @@ def main() -> int:
             notes.append(f"::notice::skill '{skill}' (Phase {ph}) not authored yet - skipped (deferred)")
             continue
 
-        rel_skill = f".github/skills/{skill}"
+        rel_skill = f".github/skills/build/{skill}"
         skill_md = folder / "SKILL.md"
         if not skill_md.exists():
             err(rel_skill, f"skill '{skill}' is missing SKILL.md")
@@ -170,3 +170,4 @@ def main() -> int:
 
 if __name__ == "__main__":
     sys.exit(main())
+

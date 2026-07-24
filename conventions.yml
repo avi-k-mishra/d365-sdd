@@ -101,7 +101,7 @@ component_types:
 # which fields a design item must carry). A skill is a DOMAIN grouping layered
 # over the component_type prefix — some `config_*` types are re-homed by concern
 # (config_audit -> dataverse-security, config_env_variable -> alm-packaging,
-# config_ai_* -> dataverse-ai). Each skill lives at `.github/skills/<skill>/`
+# config_ai_* -> dataverse-ai). Each skill lives at `.github/skills/build/<skill>/`
 # with a thin `SKILL.md` (router) + one `<component_type>.md` deep reference per
 # covered type; that reference file == the Stage-4 `patterns/<component_type>.md`.
 # Wildcard members (e.g. `config_ai_*`) match the parameterised component_types.
